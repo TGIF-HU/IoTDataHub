@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Dashboard</title>
+    <script>
+        function fetchValidDevices() {
+            fetch('/valid_devices')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('deviceCount').innerText = data.valid_device_count;
+                })
+                .catch(error => console.error('Error fetching valid device count:', error));
+        }
+
+        function fetchScannedDevices() {
+            fetch('/scanned_devices')
+                .then(response => response.json())
+                .then(data => {
+                    const deviceList = document.getElementById('deviceList');
+                    deviceList.innerHTML = ''; // リストをクリア
+                    data.forEach(device => {
+                        const listItem = document.createElement('li');
+                        listItem.innerText = `Address: ${device.address}, RSSI: ${device.rssi}, Device ID: ${device.device_id}, Manufacture ID: ${device.manufacture_id}, Name: ${device.name}, Time: ${device.time}`;
+                        deviceList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching scanned devices:', error));
+        }
+
+        // ページが読み込まれたらデバイス情報を定期的に更新
+        window.onload = function() {
+            fetchValidDevices(); // 初回取得
+            fetchScannedDevices(); // 初回取得
+            setInterval(fetchValidDevices, 5000); // 5秒ごとに有効デバイス数を更新
+            setInterval(fetchScannedDevices, 5000); // 5秒ごとにスキャンされたデバイス情報を更新
+        };
+    </script>
+</head>
+<body>
+    <h1>Device Dashboard</h1>
+    <p>直近5分間の有効デバイス数: <span id="deviceCount">0</span></p>
+
+    <h2>30分以内にスキャンされたデバイス情報:</h2>
+    <ul id="deviceList">
+        <!-- デバイス情報はここに表示される -->
+    </ul>
+</body>
+</html>
