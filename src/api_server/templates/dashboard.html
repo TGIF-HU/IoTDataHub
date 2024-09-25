@@ -20,9 +20,27 @@
                 .then(data => {
                     const deviceList = document.getElementById('deviceList');
                     deviceList.innerHTML = ''; // リストをクリア
+
                     data.forEach(device => {
                         const listItem = document.createElement('li');
-                        listItem.innerText = `Address: ${device.address}, RSSI: ${device.rssi}, Device ID: ${device.device_id}, Manufacture ID: ${device.manufacture_id}, Name: ${device.name}, Time: ${device.time}`;
+
+                        // `manufacture_id` が配列の場合、表示形式を整える
+                        const manufactureIdStr = Array.isArray(device.manufacture_id)
+                            ? device.manufacture_id.join(', ')
+                            : device.manufacture_id;
+
+                        // `name` が空文字の場合の処理
+                        const deviceName = device.name || '(no name)';
+
+                        // リストアイテムにデバイス情報を表示
+                        listItem.innerHTML = `
+                            <strong>Address:</strong> ${device.address}<br>
+                            <strong>RSSI:</strong> ${device.rssi}<br>
+                            <strong>Device ID:</strong> ${device.device_id}<br>
+                            <strong>Manufacture ID:</strong> ${manufactureIdStr}<br>
+                            <strong>Name:</strong> ${deviceName}<br>
+                            <strong>Time:</strong> ${device.time}
+                        `;
                         deviceList.appendChild(listItem);
                     });
                 })
