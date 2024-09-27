@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Device Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.jsを追加 -->
     <script>
+        let rssiData = [];
+        let rssiChart; // グローバル変数でチャートを管理
+
         function fetchValidDevices() {
             fetch('/valid_devices')
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('deviceCount').innerText = data.valid_device_count;
+                    updateLastUpdatedTime();
                 })
                 .catch(error => console.error('Error fetching valid device count:', error));
         }
@@ -20,19 +26,17 @@
                 .then(data => {
                     const deviceList = document.getElementById('deviceList');
                     deviceList.innerHTML = ''; // リストをクリア
+                    rssiData = []; // RSSIデータをリセット
 
                     data.forEach(device => {
                         const listItem = document.createElement('li');
 
-                        // `manufacture_id` が配列の場合、表示形式を整える
                         const manufactureIdStr = Array.isArray(device.manufacture_id)
                             ? device.manufacture_id.join(', ')
                             : device.manufacture_id;
 
-                        // `name` が空文字の場合の処理
                         const deviceName = device.name || '(no name)';
 
-                        // リストアイテムにデバイス情報を表示
                         listItem.innerHTML = `
                             <strong>Address:</strong> ${device.address}<br>
                             <strong>RSSI:</strong> ${device.rssi}<br>
@@ -42,27 +46,100 @@
                             <strong>Time:</strong> ${device.time}
                         `;
                         deviceList.appendChild(listItem);
+
+                        // RSSIデータを集める
+                        rssiData.push(device.rssi);
                     });
+
+                    updateLastUpdatedTime();
+                    updateHistogram(); // ヒストグラムを更新
                 })
                 .catch(error => console.error('Error fetching scanned devices:', error));
         }
 
-        // ページが読み込まれたらデバイス情報を定期的に更新
-        window.onload = function() {
-            fetchValidDevices(); // 初回取得
-            fetchScannedDevices(); // 初回取得
-            setInterval(fetchValidDevices, 5000); // 5秒ごとに有効デバイス数を更新
-            setInterval(fetchScannedDevices, 5000); // 5秒ごとにスキャンされたデバイス情報を更新
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            const formattedTime = now.toLocaleString();
+            document.getElementById('lastUpdated').innerText = formattedTime;
+        }
+
+        function initializeHistogram() {
+            const ctx = document.getElementById('rssiChart').getContext('2d');
+            rssiChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [], // 初期化時には空のラベル
+                    datasets: [{
+                        label: 'デバイス数',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'RSSI (dBm)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'デバイス数'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateHistogram() {
+            const rssiRange = [-100, -90, -80, -70, -60, -50, -40, -30]; // RSSIの範囲を指定
+            const counts = new Array(rssiRange.length).fill(0);
+
+            // RSSIを範囲ごとにカウント
+            rssiData.forEach(rssi => {
+                for (let i = 0; i < rssiRange.length; i++) {
+                    if (rssi < rssiRange[i]) {
+                        counts[i]++;
+                        break;
+                    }
+                }
+            });
+
+            // ヒストグラムのデータを更新
+            rssiChart.data.labels = rssiRange.map((rssi, i) => `${rssi}dBm〜`);
+            rssiChart.data.datasets[0].data = counts;
+            rssiChart.update(); // チャートを再描画
+        }
+
+        window.onload = function () {
+            initializeHistogram(); // ページ読み込み時にヒストグラムを初期化
+            fetchValidDevices();
+            fetchScannedDevices();
+            setInterval(fetchValidDevices, 5000);
+            setInterval(fetchScannedDevices, 5000); // 5秒ごとにデバイス情報とヒストグラムを更新
         };
     </script>
 </head>
+
 <body>
     <h1>Device Dashboard</h1>
     <p>直近5分間の有効デバイス数: <span id="deviceCount">0</span></p>
+
+    <p>最終更新時刻: <span id="lastUpdated">未更新</span></p>
+
+    <h2>RSSIヒストグラム</h2>
+    <canvas id="rssiChart" width="400" height="200"></canvas> <!-- ヒストグラムを表示するキャンバス -->
 
     <h2>30分以内にスキャンされたデバイス情報:</h2>
     <ul id="deviceList">
         <!-- デバイス情報はここに表示される -->
     </ul>
 </body>
+
 </html>
