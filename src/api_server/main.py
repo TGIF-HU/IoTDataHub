@@ -7,28 +7,29 @@ app = Flask(__name__)
 device_data = {}
 
 # RSSIのしきい値と時間設定
-RSSI_THRESHOLD = -70  # RSSIのしきい値（適宜調整可能）
+RSSI_THRESHOLD = -200  # RSSIのしきい値（適宜調整可能）
 SCAN_TIMEOUT = timedelta(minutes=30)  # 30分以上スキャンされていないデバイスを削除
 VALID_DEVICE_CHECK_PERIOD = timedelta(minutes=5)  # 有効デバイスの時間範囲
 
+
 # POSTされたJSONデータを受け取るエンドポイント
-@app.route('/', methods=['POST'])
+@app.route("/", methods=["POST"])
 def post_json():
     if request.is_json:
         data = request.get_json()
 
         # JSONから各項目を取得
-        device_id = data.get('device_id')
-        address = data.get('address')  # MACアドレス
-        rssi = data.get('rssi')
-        manufacture_id = data.get('manufacture_id')  # 製造者コード
-        name = data.get('name')  # デバイスの名前
-        time_str = data.get('time')  # スキャンした時刻
+        device_id = data.get("device_id")
+        address = data.get("address")  # MACアドレス
+        rssi = data.get("rssi")
+        manufacture_id = data.get("manufacture_id")  # 製造者コード
+        name = data.get("name")  # デバイスの名前
+        time_str = data.get("time")  # スキャンした時刻
 
         print(device_id, address, rssi, manufacture_id, name, time_str)
         try:
             # ISO 8601形式の時刻をdatetimeに変換 (ミリ秒を含む形式に対応)
-            timestamp = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+            timestamp = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ")
         except (ValueError, TypeError):
             return jsonify({"status": "error", "message": "Invalid time format"}), 400
 
@@ -53,6 +54,7 @@ def cleanup_old_data():
         if device_data[address][0] < cutoff_time:
             del device_data[address]
 
+
 # 有効デバイスをチェックする
 def get_valid_devices():
     cutoff_time = datetime.utcnow() - VALID_DEVICE_CHECK_PERIOD
@@ -66,8 +68,9 @@ def get_valid_devices():
 
     return valid_devices
 
+
 # 30分以内のすべてのデバイス情報を取得する
-@app.route('/scanned_devices', methods=['GET'])
+@app.route("/scanned_devices", methods=["GET"])
 def scanned_devices():
     # 30分以内のスキャンされたすべてのデバイス情報を返す
     scanned_devices = []
@@ -75,26 +78,22 @@ def scanned_devices():
     for address, entry in device_data.items():
         timestamp, rssi, device_id, manufacture_id, name = entry
         if timestamp > cutoff_time:
-            scanned_devices.append({
-                "address": address,
-                "rssi": rssi,
-                "device_id": device_id,
-                "manufacture_id": manufacture_id,
-                "name": name,
-                "time": timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-            })
+            scanned_devices.append({"address": address, "rssi": rssi, "device_id": device_id, "manufacture_id": manufacture_id, "name": name, "time": timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")})
     return jsonify(scanned_devices)
 
+
 # 有効デバイス数を表示するエンドポイント
-@app.route('/valid_devices', methods=['GET'])
+@app.route("/valid_devices", methods=["GET"])
 def valid_devices():
     valid_devices = get_valid_devices()
     return jsonify({"valid_device_count": len(valid_devices)})
 
-# ダッシュボードのページを返すエンドポイント
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+# ダッシュボードのページを返すエンドポイント
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5050)
