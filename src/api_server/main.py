@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime, timedelta
+from datetime import timezone
 
 app = Flask(__name__)
 
@@ -29,7 +30,7 @@ def post_json():
         print(device_id, address, rssi, manufacture_id, name, time_str)
         try:
             # ISO 8601形式の時刻をdatetimeに変換 (ミリ秒を含む形式に対応)
-            timestamp = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+            timestamp = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
         except (ValueError, TypeError):
             return jsonify({"status": "error", "message": "Invalid time format"}), 400
 
@@ -49,21 +50,25 @@ def post_json():
 
 # 古いデバイスデータを削除する
 def cleanup_old_data():
-    cutoff_time = datetime.utcnow() - SCAN_TIMEOUT
+    cutoff_time = datetime.now(tz=timezone.utc) - SCAN_TIMEOUT
     for address in list(device_data.keys()):
-        if device_data[address][0] < cutoff_time:
+        # timestampをoffset-awareに変換
+        timestamp = device_data[address][0]
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+        if timestamp < cutoff_time:
             del device_data[address]
 
 
 # 有効デバイスをチェックする
 def get_valid_devices():
-    cutoff_time = datetime.utcnow() - VALID_DEVICE_CHECK_PERIOD
+    cutoff_time = datetime.now(tz=timezone.utc) - VALID_DEVICE_CHECK_PERIOD
     valid_devices = set()
 
     # 各デバイスに対して、一定のRSSI値を満たすか確認
     for address, entry in device_data.items():
         timestamp, rssi, device_id, manufacture_id, name = entry
-        if timestamp > cutoff_time and rssi >= RSSI_THRESHOLD:
+        if (timestamp > cutoff_time) and (rssi >= RSSI_THRESHOLD):
             valid_devices.add(address)
 
     return valid_devices
@@ -74,7 +79,7 @@ def get_valid_devices():
 def scanned_devices():
     # 30分以内のスキャンされたすべてのデバイス情報を返す
     scanned_devices = []
-    cutoff_time = datetime.utcnow() - SCAN_TIMEOUT
+    cutoff_time = datetime.now(tz=timezone.utc) - SCAN_TIMEOUT
     for address, entry in device_data.items():
         timestamp, rssi, device_id, manufacture_id, name = entry
         if timestamp > cutoff_time:
