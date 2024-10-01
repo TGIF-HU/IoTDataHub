@@ -7,6 +7,9 @@ app = Flask(__name__)
 # デバイスのデータを保存する辞書 {address: [(timestamp, rssi, device_id, manufacture_id, name)]}
 device_data = {}
 
+# 受信用デバイスの位置データを保存する辞書 {device_id: {x, y}}
+receiver_positions = {}
+
 # RSSIのしきい値と時間設定
 RSSI_THRESHOLD = -200  # RSSIのしきい値（適宜調整可能）
 SCAN_TIMEOUT = timedelta(minutes=30)  # 30分以上スキャンされていないデバイスを削除
@@ -59,7 +62,6 @@ def cleanup_old_data():
         if timestamp < cutoff_time:
             del device_data[address]
 
-
 # 有効デバイスをチェックする
 def get_valid_devices():
     cutoff_time = datetime.now(tz=timezone.utc) - VALID_DEVICE_CHECK_PERIOD
@@ -72,6 +74,35 @@ def get_valid_devices():
             valid_devices.add(address)
 
     return valid_devices
+
+# 受信用デバイスの位置を保存する
+@app.route("/save_devices", methods=["POST"])
+def save_devices():
+    if request.is_json:
+        data = request.get_json()
+        for device in data.get("devices", []):
+            device_id = device.get("device_id")
+            position = device.get("position")
+            if device_id and position:
+                receiver_positions[device_id] = position
+        return jsonify({"status": "success"}), 200
+    return jsonify({"status": "error", "message": "Request body must be JSON"}), 400
+
+
+@app.route("/get_devices", methods=["GET"])
+def get_devices():
+    # 受信用デバイスの位置を返す
+    return jsonify({"devices": [{"device_id": k, "position": v} for k, v in receiver_positions.items()]})
+
+@app.route("/get_device_positions", methods=["GET"])
+def get_device_positions():
+    # 仮に送信デバイスの推定位置を設定
+    sender_position = {"device_id": "sender1", "position": {"x": 0.5, "y": 0.5}}
+
+    return jsonify({
+        "receivers": [{"device_id": k, "position": v} for k, v in receiver_positions.items()],
+        "sender": sender_position
+    })
 
 
 # 30分以内のすべてのデバイス情報を取得する
@@ -98,6 +129,12 @@ def valid_devices():
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
+
+
+# 受信用デバイス設定ページを返すエンドポイント
+@app.route("/setup")
+def setup():
+    return render_template("setup.html")
 
 
 if __name__ == "__main__":
