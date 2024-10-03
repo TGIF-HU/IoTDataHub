@@ -10,3 +10,5 @@ wheels/
 .venv
 
 receiver_positions.json
+
+.vscode
