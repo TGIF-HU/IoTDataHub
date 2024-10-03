@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 from scipy.optimize import minimize
 
-device_data = {}  # デバイスデータの辞書
+device_data = {}  # デバイスデータの辞書 一定時間経過したデータは削除される MACアドレスをキーにして、{name:str, manufacture_id:[int], last_seen:time, rssi_data:[{device_id:int, rssi:int, timestamp:time}]} を値として保持`
 receiver_positions = {}  # 受信用デバイスの位置データの辞書
 
 # ファイルパス設定
@@ -43,12 +43,12 @@ def rssi_to_distance(rssi, tx_power=-50, plexp=2):
 def estimate_sender_position(rssi_data):
     def objective_function(sender_position):
         total_error = 0
-        for data in rssi_data:
-            if data['device_id'] not in receiver_positions:
+        for device_id, data in rssi_data.items():
+            if str(device_id) not in receiver_positions:
                 print(f"Error: Device ID {data['device_id']} not found in receiver_positions.")
                 continue  # スキップして他のデバイスで処理を続行
             
-            receiver_position = receiver_positions[data['device_id']]
+            receiver_position = receiver_positions[str(device_id)]
             rssi = data['rssi']
             estimated_distance = rssi_to_distance(rssi)
             
@@ -60,45 +60,52 @@ def estimate_sender_position(rssi_data):
         return total_error
 
     # 初期値 (0.5, 0.5) で最適化を開始
-    result = minimize(objective_function, [0.5, 0.5], bounds=[(0, 1), (0, 1)])
-    return result.x  # 推定された送信デバイスの座標
+    result = minimize(objective_function, [0.5, 0.5], bounds=[(0.2, 0.8), (0.2, 0.8)])
+    # return result.x  # 推定された送信デバイスの座標
+    return {"x": result.x[0], "y": result.x[1]}
 
 # デバイスごとにRSSIデータをグループ化し、位置推定を行う
 def update_sender_positions():
     grouped_data = group_rssi_data_by_mac_address()
     sender_positions = {}
 
-    for mac_address, rssi_data in grouped_data.items():
-        if len(rssi_data) >= 3:  # 少なくとも3つの受信用デバイスが必要
-            sender_positions[mac_address] = estimate_sender_position(rssi_data)
+    for mac_address, entry in grouped_data.items():
+        if len(entry["rssi_data"]) >= 3:  # 少なくとも3つの受信用デバイスが必要
+            sender_positions[mac_address] = estimate_sender_position(entry["rssi_data"])
+        else:
+            print(f"Error: Not enough data to estimate position for device {mac_address}")
 
     return sender_positions
 
-# MACアドレスごとにRSSIデータをグループ化
+# RSSIデータをMACアドレスごとにグループ化
 def group_rssi_data_by_mac_address():
-    grouped_data = {}
-    cutoff_time = datetime.now(tz=timezone.utc) - timedelta(seconds=10)  # 例えば10秒以内のデータ
+    # grouped_data = {}
+    # print("Device data:")
+    # print(device_data)
 
-    for address, entry in device_data.items():
-        timestamp, rssi, device_id, manufacture_id, name = entry
-        if timestamp > cutoff_time:
-            mac_address = address  # MACアドレスをキーとして使用
-            if mac_address not in grouped_data:
-                grouped_data[mac_address] = []
-            grouped_data[mac_address].append({
-                "device_id": device_id,
-                "rssi": rssi,
-                "name": name
-            })
+    # for mac_address, entry in device_data.items():
+    #     timestamp, rssi, device_id, manufacture_id, name = entry
+    #     if mac_address not in grouped_data:
+    #         grouped_data[mac_address] = []
+        
+    #     grouped_data[mac_address].append({
+    #         "device_id": device_id,
+    #         "rssi": rssi,
+    #         "timestamp": timestamp
+    #     })
 
-    return grouped_data
+    # print("Grouped RSSI data:")
+    # print(grouped_data)
+
+    return device_data
+
 
 
 # 古いデバイスデータを削除する
 def cleanup_old_data():
     cutoff_time = datetime.now(tz=timezone.utc) - SCAN_TIMEOUT
     for address in list(device_data.keys()):
-        timestamp = device_data[address][0]
+        timestamp = device_data[address]["last_seen"]
         if timestamp < cutoff_time:
             del device_data[address]
 
@@ -109,7 +116,8 @@ def get_valid_devices():
 
     # 各デバイスに対して、一定のRSSI値を満たすか確認
     for address, entry in device_data.items():
-        timestamp, rssi, device_id, manufacture_id, name = entry
+        timestamp = entry["last_seen"]
+        rssi = max(d["rssi"] for d in device_data[address]["rssi_data"].values())
         if (timestamp > cutoff_time) and (rssi >= RSSI_THRESHOLD):
             valid_devices.add(address)
 

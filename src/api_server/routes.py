@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 from flask import jsonify, render_template, request
 from utils import (
-    SCAN_TIMEOUT,
     cleanup_old_data,
     device_data,
     get_valid_devices,
@@ -33,7 +32,27 @@ def register_routes(app):
                 return jsonify({"status": "error", "message": "Invalid time format"}), 400
 
             if address and rssi is not None and device_id:
-                device_data[address] = (timestamp, rssi, device_id, manufacture_id, name)
+                # デバイスデータを保存
+                # デバイスが初めてスキャンされた場合は新しいエントリを作成
+                if address not in device_data:
+                    device_data[address] = {
+                        "name": name,
+                        "manufacture_id": manufacture_id,
+                        "last_seen": timestamp,
+                        "rssi_data": {
+                            device_id: {
+                                "rssi": rssi,
+                                "timestamp": timestamp
+                            }
+                        }
+                    }
+                # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
+                else:
+                    device_data[address]["rssi_data"][device_id] = {
+                        "rssi": rssi,
+                        "timestamp": timestamp
+                    }
+                    device_data[address]["last_seen"] = max(timestamp, device_data[address]["last_seen"])
                 cleanup_old_data()
                 return jsonify({"status": "success"}), 200
             else:
@@ -99,21 +118,7 @@ def register_routes(app):
     # 30分以内のスキャンされたすべてのデバイス情報を返す
     @app.route("/scanned_devices", methods=["GET"])
     def scanned_devices():
-        # 30分以内のスキャンされたすべてのデバイス情報を返す
-        scanned_devices = []
-        cutoff_time = datetime.now(tz=timezone.utc) - SCAN_TIMEOUT
-        for address, entry in device_data.items():
-            timestamp, rssi, device_id, manufacture_id, name = entry
-            if timestamp > cutoff_time:
-                scanned_devices.append({
-                    "address": address,
-                    "rssi": rssi,
-                    "device_id": device_id,
-                    "manufacture_id": manufacture_id,
-                    "name": name,
-                    "time": timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-                })
-        return jsonify(scanned_devices)
+        return jsonify(device_data)
 
 
     # 受信用デバイスの位置を設定する管理画面
