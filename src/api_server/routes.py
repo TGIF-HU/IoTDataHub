@@ -13,7 +13,8 @@ from utils import (
 )
 
 
-def register_routes(app):# POSTされたJSONデータを受け取るエンドポイント
+def register_routes(app):
+    # POSTされたJSONデータを受け取るエンドポイント
     @app.route("/", methods=["POST"])
     def post_json():
         if request.is_json:
