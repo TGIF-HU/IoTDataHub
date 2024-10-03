@@ -15,7 +15,6 @@ RECEIVER_POSITIONS_FILE = 'receiver_positions.json'
 RSSI_THRESHOLD = -200
 SCAN_TIMEOUT = timedelta(minutes=30)
 VALID_DEVICE_CHECK_PERIOD = timedelta(minutes=5)
-RSSI_TO_DISTANCE_CONSTANT = 2  # 距離計算用の伝搬指数n
 
 # サーバー起動時に受信用デバイスの位置をファイルから読み込み
 def load_receiver_positions():
@@ -35,9 +34,10 @@ def save_receiver_positions_to_file():
 load_receiver_positions()
 
 # RSSIから距離を推定
-def rssi_to_distance(rssi, tx_power=-50):
-    # RSSIをもとに距離を計算する関数。tx_powerは送信機の発信電力。
-    return 10 ** ((tx_power - rssi) / (10 * RSSI_TO_DISTANCE_CONSTANT))
+# TODO: 適切なパラメータを設定
+def rssi_to_distance(rssi, tx_power=-50, plexp=2):
+    # RSSIをもとに距離を計算する関数。tx_powerは送信機の発信電力。plexpは伝搬指数
+    return 10 ** ((tx_power - rssi) / (10 * plexp))
 
 # 三角測量による最尤推定法で送信デバイスの位置を推定
 def estimate_sender_position(rssi_data):
