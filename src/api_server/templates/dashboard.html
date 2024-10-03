@@ -185,11 +185,12 @@
                 data.senders.forEach(sender => {
                     const x = sender.position.x * mapWidth;
                     const y = sender.position.y * mapHeight;
-                    ctx.fillStyle = 'green';
+                    ctx.fillStyle = 'rgba(0, 128, 0, 0.2)';
                     ctx.beginPath();
                     ctx.arc(x, y, 10, 0, 2 * Math.PI);
                     ctx.fill();
-                    ctx.fillText('Device', x + 10, y);
+                    if(deviceData[sender.mac_address].name)
+                        ctx.fillText(deviceData[sender.mac_address].name, x + 10, y);
                 });
             }
         }
