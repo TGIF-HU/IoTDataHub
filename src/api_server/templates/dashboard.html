@@ -107,7 +107,8 @@
         }
 
         function updateHistogram() {
-            const rssiRange = [-100, -90, -80, -70, -60, -50, -40, -30]; // RSSIの範囲を指定
+            // RSSIの範囲を5刻みで指定
+            const rssiRange = Array.from({ length: 21 }, (_, i) => -100 + i * 5);
             const receiverCounts = {}; // 各receiverごとのRSSIカウント
 
             // 各receiverごとにRSSIをカウント
