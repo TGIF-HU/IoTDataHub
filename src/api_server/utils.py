@@ -27,7 +27,7 @@ def load_receiver_positions():
         receiver_positions = {}
 
 # 受信用デバイスの位置をファイルに保存
-def save_receiver_positions():
+def save_receiver_positions_to_file():
     with open(RECEIVER_POSITIONS_FILE, 'w') as f:
         json.dump(receiver_positions, f)
 

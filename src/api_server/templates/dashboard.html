@@ -27,7 +27,7 @@
 
         // デバイスの位置情報を取得
         function fetchDevicePositions() {
-            fetch('/get_device_positions_admin')
+            fetch('/get_device_positions_and_receiver_positions')
                 .then(response => response.json())
                 .then(data => {
                     receiverPositions = data.receivers; // 受信デバイスの位置を格納

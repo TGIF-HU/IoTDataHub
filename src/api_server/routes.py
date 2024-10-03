@@ -8,7 +8,7 @@ from utils import (
     get_valid_devices,
     group_rssi_data_by_mac_address,
     receiver_positions,
-    save_receiver_positions,
+    save_receiver_positions_to_file,
     update_sender_positions,
 )
 
@@ -49,8 +49,8 @@ def register_routes(app):
 
 
     # 受信用デバイスの位置を保存する
-    @app.route("/save_devices", methods=["POST"])
-    def save_devices():
+    @app.route("/save_receiver_positions", methods=["POST"])
+    def save_receiver_positions():
         if request.is_json:
             data = request.get_json()
             for device in data.get("devices", []):
@@ -58,18 +58,35 @@ def register_routes(app):
                 position = device.get("position")
                 if device_id and position:
                     receiver_positions[device_id] = position
-            save_receiver_positions()  # ファイルに保存
+            save_receiver_positions_to_file()  # ファイルに保存
             return jsonify({"status": "success"}), 200
         return jsonify({"status": "error", "message": "Request body must be JSON"}), 400
 
     # デバイスの位置のみを返す
-    @app.route("/get_device_positions_admin", methods=["GET"])
-    def get_device_positions_admin():
+    @app.route("/get_device_positions_and_receiver_positions", methods=["GET"])
+    def get_device_positions_and_receiver_positions():
         sender_positions = update_sender_positions()
         return jsonify({
             "receivers": [{"device_id": k, "position": v} for k, v in receiver_positions.items()],
             "senders": [{"mac_address": k, "position": v} for k, v in sender_positions.items()]
         })
+    
+    # TODO: JSON形式の設計
+    @app.route("/get_device_positions", methods=["GET"])
+    def get_device_positions():
+        sender_positions = update_sender_positions()
+        return jsonify({
+            "senders": [{"mac_address": k, "position": v} for k, v in sender_positions.items()]
+        })
+    
+    # TODO: JSON形式の設計
+    @app.route("/get_receiver_positions", methods=["GET"])
+    def get_receiver_positions():
+        return jsonify({
+            "receivers": [{"device_id": k, "position": v} for k, v in receiver_positions.items()]
+        })
+    
+    
 
     # RSSIデータを返すエンドポイント
     @app.route("/get_device_rssi_admin", methods=["GET"])

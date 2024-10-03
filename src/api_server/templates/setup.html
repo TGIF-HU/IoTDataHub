@@ -14,10 +14,10 @@
             const mapContainer = document.getElementById('mapContainer');
 
             // サーバーから既に設定されたデバイスを取得
-            fetch('/get_devices')
+            fetch('/get_receiver_positions')
                 .then(response => response.json())
                 .then(data => {
-                    devices = data.devices;
+                    devices = data.receivers;
                     devices.forEach(device => {
                         addDeviceMarker(device);
                     });
@@ -101,7 +101,7 @@
 
         // 保存ボタン押下時にデバイスの位置をサーバーに送信
         function saveDevicePositions() {
-            fetch('/save_devices', {
+            fetch('/save_receiver_positions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
