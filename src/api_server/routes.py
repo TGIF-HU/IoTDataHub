@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from flask import jsonify, render_template, request
 from utils import (
@@ -30,6 +30,10 @@ def register_routes(app):
                 timestamp = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
             except (ValueError, TypeError):
                 return jsonify({"status": "error", "message": "Invalid time format"}), 400
+            
+            # timestampがあまりにも古い(１年以上)場合は、現在の時刻に設定
+            if timestamp < datetime.now(tz=timezone.utc) - timedelta(days=365):
+                timestamp = datetime.now(tz=timezone.utc)
 
             if address and rssi is not None and device_id:
                 # デバイスデータを保存
