@@ -183,14 +183,22 @@
             // 送信デバイスの描画
             if (data.senders) {
                 data.senders.forEach(sender => {
-                    const x = sender.position.x * mapWidth;
-                    const y = sender.position.y * mapHeight;
-                    ctx.fillStyle = 'rgba(0, 128, 0, 0.2)';
-                    ctx.beginPath();
-                    ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                    ctx.fill();
-                    if(deviceData[sender.mac_address].name)
+                    if(deviceData[sender.mac_address].name){
+                        const x = sender.position.x * mapWidth;
+                        const y = sender.position.y * mapHeight;
+                        ctx.fillStyle = 'rgba(0, 0, 128, 1)';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
+                        ctx.fill();
                         ctx.fillText(deviceData[sender.mac_address].name, x + 10, y);
+                    }else{
+                        const x = sender.position.x * mapWidth;
+                        const y = sender.position.y * mapHeight;
+                        ctx.fillStyle = 'rgba(0, 128, 0, 0.2)';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
                 });
             }
         }
