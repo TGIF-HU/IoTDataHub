@@ -12,3 +12,4 @@ wheels/
 receiver_positions.json
 
 .vscode
+.DS_Store
