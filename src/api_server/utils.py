@@ -39,7 +39,7 @@ load_receiver_positions()
 
 # RSSIから距離を推定
 # TODO: 適切なパラメータを設定
-def rssi_to_distance(rssi, rssi_at_1=-80, plexp=2):
+def rssi_to_distance(rssi, rssi_at_1=-27, plexp=2):
     # RSSIをもとに距離を計算する関数。tx_powerは送信機の発信電力。plexpは伝搬指数
     return 10 ** ((rssi_at_1 - rssi) / (10 * plexp))
 
@@ -68,7 +68,9 @@ def estimate_sender_position(rssi_data):
         return total_error
 
     # 初期値 (0.5, 0.5) で最適化を開始
-    result = minimize(objective_function, [0.5, 0.5], bounds=[(0.2, 0.8), (0.2, 0.8)])
+    width = 716
+    height = 1000
+    result = minimize(objective_function, [width/2, height/2], bounds=[(width*0.1, width*0.9), (height*0.1, height*0.9)])
     # return result.x  # 推定された送信デバイスの座標
     return {"x": result.x[0], "y": result.x[1]}
 

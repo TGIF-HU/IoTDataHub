@@ -171,8 +171,10 @@
 
             // 受信デバイスの描画
             data.receivers.forEach(device => {
-                const x = device.position.x * mapWidth;
-                const y = device.position.y * mapHeight;
+                // const x = device.position.x * mapWidth;
+                // const y = device.position.y * mapHeight;
+                const x = device.position.x;
+                const y = device.position.y;
                 ctx.fillStyle = 'red';
                 ctx.beginPath();
                 ctx.arc(x, y, 10, 0, 2 * Math.PI);
@@ -184,16 +186,20 @@
             if (data.senders) {
                 data.senders.forEach(sender => {
                     if(deviceData[sender.mac_address].name){
-                        const x = sender.position.x * mapWidth;
-                        const y = sender.position.y * mapHeight;
+                        // const x = sender.position.x * mapWidth;
+                        // const y = sender.position.y * mapHeight;
+                        const x = sender.position.x;
+                        const y = sender.position.y;
                         ctx.fillStyle = 'rgba(0, 0, 128, 1)';
                         ctx.beginPath();
                         ctx.arc(x, y, 10, 0, 2 * Math.PI);
                         ctx.fill();
                         ctx.fillText(deviceData[sender.mac_address].name, x + 10, y);
                     }else{
-                        const x = sender.position.x * mapWidth;
-                        const y = sender.position.y * mapHeight;
+                        // const x = sender.position.x * mapWidth;
+                        // const y = sender.position.y * mapHeight;
+                        const x = sender.position.x;
+                        const y = sender.position.y;
                         ctx.fillStyle = 'rgba(0, 128, 0, 0.2)';
                         ctx.beginPath();
                         ctx.arc(x, y, 10, 0, 2 * Math.PI);
@@ -226,9 +232,9 @@
     <canvas id="rssiChart" width="400" height="200"></canvas> <!-- ヒストグラムを表示するキャンバス -->
 
     <h2>デバイスの分布</h2>
-    <div id="mapContainer" style="position: relative; width: 1000px; height: 700px;">
-        <img src="/static/map_image.png" style="position: absolute; width: 100%; height: 100%;">
-        <canvas id="mapCanvas" width="1000" height="700" style="position: absolute;"></canvas>
+    <div id="mapContainer" style="position: relative; width: 716; height: 1000px;">
+        <img src="/static/map_image.png" style="position: absolute;">
+        <canvas id="mapCanvas" width="716" height="1000" style="position: absolute;"></canvas>
     </div>
 
     <h2>30分以内にスキャンされたデバイス情報:</h2>

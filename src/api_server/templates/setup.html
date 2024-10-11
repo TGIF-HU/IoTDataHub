@@ -67,8 +67,10 @@
         function updateMarkerPosition(marker, position, mapContainer) {
             const containerWidth = mapContainer.offsetWidth;
             const containerHeight = mapContainer.offsetHeight;
-            const left = position.x * containerWidth;
-            const top = position.y * containerHeight;
+            // const left = position.x * containerWidth;
+            // const top = position.y * containerHeight;
+            const left = position.x;
+            const top = position.y;
             marker.style.left = `${left}px`;
             marker.style.top = `${top}px`;
         }
@@ -94,9 +96,11 @@
         // マウス座標を画像に対する割合で取得
         function getRelativeCoordinates(event, container) {
             const rect = container.getBoundingClientRect();
-            const x = (event.clientX - rect.left) / container.offsetWidth;
-            const y = (event.clientY - rect.top) / container.offsetHeight;
-            return { x: Math.min(1, Math.max(0, x)), y: Math.min(1, Math.max(0, y)) };
+            // const x = (event.clientX - rect.left) / container.offsetWidth;
+            // const y = (event.clientY - rect.top) / container.offsetHeight;
+            const x = (event.clientX - rect.left);
+            const y = (event.clientY - rect.top);
+            return { x: Math.min(container.offsetWidth, Math.max(0, x)), y: Math.min(container.offsetHeight, Math.max(0, y)) };
         }
 
         // 保存ボタン押下時にデバイスの位置をサーバーに送信
@@ -118,8 +122,8 @@
     <style>
         #mapContainer {
             position: relative;
-            width: 600px;
-            height: 400px;
+            width: 716px;
+            height: 1000px;
         }
 
         #map {
