@@ -39,7 +39,7 @@ load_receiver_positions()
 
 # RSSIから距離を推定
 # TODO: 適切なパラメータを設定
-def rssi_to_distance(rssi, rssi_at_1=-27, plexp=2):
+def rssi_to_distance(rssi, rssi_at_1=-26, plexp=2):
     # RSSIをもとに距離を計算する関数。tx_powerは送信機の発信電力。plexpは伝搬指数
     return 10 ** ((rssi_at_1 - rssi) / (10 * plexp))
 
