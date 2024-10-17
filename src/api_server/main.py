@@ -1,11 +1,7 @@
 from flask import Flask
-from routes import register_routes
+from routes import DeviceAPI
 
-app = Flask(__name__)
-
-
-# ルートを登録
-register_routes(app)
+app = DeviceAPI(__name__)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050)

@@ -1,6 +1,5 @@
+from flask import Flask, request, jsonify, render_template
 from datetime import datetime, timedelta, timezone
-
-from flask import jsonify, render_template, request
 from utils import (
     cleanup_old_data,
     device_data,
@@ -11,69 +10,87 @@ from utils import (
     update_sender_positions,
 )
 
+class DeviceData:
+    def __init__(self, json_data):
+        self.device_id = json_data.get("device_id")
+        self.address = json_data.get("address")
+        self.rssi = json_data.get("rssi")
+        self.manufacture_id = json_data.get("manufacture_id")
+        self.name = json_data.get("name")
+        self.time_str = json_data.get("time")
+        self.timestamp = self.parse_timestamp(self.time_str)
 
-def register_routes(app):
-    # POSTされたJSONデータを受け取るエンドポイント
-    @app.route("/", methods=["POST"])
-    def post_json():
-        if request.is_json:
-            data = request.get_json()
-            device_id = data.get("device_id")
-            address = data.get("address")  # MACアドレス
-            rssi = data.get("rssi")
-            manufacture_id = data.get("manufacture_id")
-            name = data.get("name")
-            time_str = data.get("time")
+    def parse_timestamp(self, time_str):
+        try:
+            return datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            return None
 
-            print(device_id, address, rssi, manufacture_id, name, time_str)
-            try:
-                timestamp = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
-            except (ValueError, TypeError):
-                return jsonify({"status": "error", "message": "Invalid time format"}), 400
-            
-            # timestampがあまりにも古い(１年以上)場合は、現在の時刻に設定
-            if timestamp < datetime.now(tz=timezone.utc) - timedelta(days=365):
-                timestamp = datetime.now(tz=timezone.utc)
+    def is_valid(self):
+        return self.device_id is not None and self.address is not None and self.rssi is not None and self.timestamp is not None
 
-            if address and rssi is not None and device_id:
-                # デバイスデータを保存
-                # デバイスが初めてスキャンされた場合は新しいエントリを作成
-                if address not in device_data:
-                    device_data[address] = {
-                        "name": name,
-                        "manufacture_id": manufacture_id,
-                        "last_seen": timestamp,
-                        "rssi_data": {
-                            device_id: {
-                                "rssi": rssi,
-                                "timestamp": timestamp
-                            }
-                        }
-                    }
-                # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
-                else:
-                    device_data[address]["rssi_data"][device_id] = {
-                        "rssi": rssi,
-                        "timestamp": timestamp
-                    }
-                    device_data[address]["last_seen"] = max(timestamp, device_data[address]["last_seen"])
-                cleanup_old_data()
-                return jsonify({"status": "success"}), 200
-            else:
-                return jsonify({"status": "error", "message": "Missing data"}), 400
-        else:
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "manufacture_id": self.manufacture_id,
+            "last_seen": self.timestamp,
+            "rssi_data": {
+                self.device_id: {
+                    "rssi": self.rssi,
+                    "timestamp": self.timestamp
+                }
+            }
+        }
+
+class DeviceAPI(Flask):
+    def __init__(self, import_name):
+        super().__init__(import_name)
+        self.register_routes()
+
+    def register_routes(self):
+        self.add_url_rule("/", view_func=self.post_json, methods=["POST"])
+        self.add_url_rule("/valid_devices", view_func=self.valid_devices, methods=["GET"])
+        self.add_url_rule("/save_receiver_positions", view_func=self.save_receiver_positions, methods=["POST"])
+        self.add_url_rule("/get_device_positions_and_receiver_positions", view_func=self.get_device_positions_and_receiver_positions, methods=["GET"])
+        self.add_url_rule("/get_device_positions", view_func=self.get_device_positions, methods=["GET"])
+        self.add_url_rule("/get_receiver_positions", view_func=self.get_receiver_positions, methods=["GET"])
+        self.add_url_rule("/get_device_rssi_admin", view_func=self.get_device_rssi_admin, methods=["GET"])
+        self.add_url_rule("/scanned_devices", view_func=self.scanned_devices, methods=["GET"])
+        self.add_url_rule("/setup", view_func=self.setup)
+        self.add_url_rule("/", view_func=self.index)
+        self.add_url_rule("/dashboard", view_func=self.dashboard)
+
+    def post_json(self):
+        if not request.is_json:
             return jsonify({"status": "error", "message": "Request body must be JSON"}), 400
 
+        data = DeviceData(request.get_json())
+        if not data.is_valid():
+            return jsonify({"status": "error", "message": "Invalid or missing data"}), 400
 
-    @app.route("/valid_devices", methods=["GET"])
-    def valid_devices():
+        # timestampがあまりにも古い(１年以上)場合は、現在の時刻に設定
+        if data.timestamp < datetime.now(tz=timezone.utc) - timedelta(days=365):
+            data.timestamp = datetime.now(tz=timezone.utc)
+
+        if data.address not in device_data:
+            # デバイスが初めてスキャンされた場合は新しいエントリを作成
+            device_data[data.address] = data.to_dict()
+        else:
+            # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
+            device_data[data.address]["rssi_data"][data.device_id] = {
+                "rssi": data.rssi,
+                "timestamp": data.timestamp
+            }
+            device_data[data.address]["last_seen"] = max(data.timestamp, device_data[data.address]["last_seen"])
+
+        cleanup_old_data()
+        return jsonify({"status": "success"}), 200
+
+    def valid_devices(self):
         valid_device_set = get_valid_devices()
         return jsonify({"valid_device_count": len(valid_device_set)})
 
-
-    # 受信用デバイスの位置を保存する
-    @app.route("/save_receiver_positions", methods=["POST"])
-    def save_receiver_positions():
+    def save_receiver_positions(self):
         if request.is_json:
             data = request.get_json()
             for device in data.get("devices", []):
@@ -85,57 +102,44 @@ def register_routes(app):
             return jsonify({"status": "success"}), 200
         return jsonify({"status": "error", "message": "Request body must be JSON"}), 400
 
-    # デバイスの位置のみを返す
-    @app.route("/get_device_positions_and_receiver_positions", methods=["GET"])
-    def get_device_positions_and_receiver_positions():
+    def get_device_positions_and_receiver_positions(self):
         sender_positions = update_sender_positions()
         return jsonify({
             "receivers": [{"device_id": k, "position": v} for k, v in receiver_positions.items()],
             "senders": [{"mac_address": k, "position": v} for k, v in sender_positions.items()]
         })
-    
-    # TODO: JSON形式の設計
-    @app.route("/get_device_positions", methods=["GET"])
-    def get_device_positions():
+
+    def get_device_positions(self):
         sender_positions = update_sender_positions()
         return jsonify({
             "senders": [{"mac_address": k, "position": v} for k, v in sender_positions.items()]
         })
-    
-    # TODO: JSON形式の設計
-    @app.route("/get_receiver_positions", methods=["GET"])
-    def get_receiver_positions():
+
+    def get_receiver_positions(self):
         return jsonify({
             "receivers": [{"device_id": k, "position": v} for k, v in receiver_positions.items()]
         })
-    
-    
 
-    # RSSIデータを返すエンドポイント
-    @app.route("/get_device_rssi_admin", methods=["GET"])
-    def get_device_rssi_admin():
+    def get_device_rssi_admin(self):
         grouped_data = group_rssi_data_by_mac_address()
         return jsonify({
             "rssi_data": grouped_data
         })
 
-    # 30分以内のスキャンされたすべてのデバイス情報を返す
-    @app.route("/scanned_devices", methods=["GET"])
-    def scanned_devices():
+    def scanned_devices(self):
         return jsonify(device_data)
 
-
-    # 受信用デバイスの位置を設定する管理画面
-    @app.route("/setup")
-    def setup():
+    def setup(self):
         return render_template("setup.html")
 
-    # ユーザー用ページ
-    @app.route("/")
-    def index():
+    def index(self):
         return render_template("index.html")
 
-    # 管理者用ダッシュボード
-    @app.route("/dashboard")
-    def dashboard():
+    def dashboard(self):
         return render_template("dashboard.html")
+
+# Flaskアプリケーションの作成とルートの登録
+app = DeviceAPI(__name__)
+
+if __name__ == "__main__":
+    app.run(debug=True)
