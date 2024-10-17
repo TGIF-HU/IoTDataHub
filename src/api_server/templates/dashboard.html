@@ -1,245 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Device Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let deviceData = {}; // RSSIデータを格納
-        let receiverPositions = []; // 受信デバイスの位置を格納
-        let rssiChart;
-
-        // ヒストグラム用の色の定義
-        const receiverColors = ['rgba(75, 192, 192, 0.6)', 'rgba(192, 75, 192, 0.6)', 'rgba(192, 192, 75, 0.6)', 'rgba(75, 192, 75, 0.6)'];
-
-        // 有効デバイス数を取得
-        function fetchValidDevices() {
-            fetch('/valid_devices')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('deviceCount').innerText = data.valid_device_count;
-                    updateLastUpdatedTime(); // 最終更新時刻を更新
-                })
-                .catch(error => console.error('Error fetching valid device count:', error));
-        }
-
-        // デバイスの位置情報を取得
-        function fetchDevicePositions() {
-            fetch('/get_device_positions_and_receiver_positions')
-                .then(response => response.json())
-                .then(data => {
-                    receiverPositions = data.receivers; // 受信デバイスの位置を格納
-                    updateDeviceMap(data); // 地図上にデバイスを表示
-                })
-                .catch(error => console.error('Error fetching device positions:', error));
-        }
-
-        // RSSIデータを取得してヒストグラムを更新
-        function fetchDeviceRSSI() {
-            fetch('/get_device_rssi_admin')
-                .then(response => response.json())
-                .then(data => {
-                    deviceData = data.rssi_data; // RSSIデータを格納
-                    updateHistogram(); // ヒストグラムを更新
-                })
-                .catch(error => console.error('Error fetching device RSSI:', error));
-        }
-
-        // スキャンされたデバイス情報を取得
-        function fetchScannedDevices() {
-            fetch('/scanned_devices')
-                .then(response => response.json())
-                .then(data => {
-                    // macアドレスをキーにしてデバイス情報を表示
-                    const deviceList = document.getElementById('deviceList');
-                    deviceList.innerHTML = ''; // リストをクリア
-
-                    Object.keys(data).forEach(mac_address => {
-                        const device = data[mac_address];
-                        const listItem = document.createElement('li');
-                        const deviceName = device.name || '(no name)';
-                        listItem.innerHTML = `
-                            <strong>Address:</strong> ${mac_address}<br>
-                            <strong>Manufacture ID:</strong> ${device.manufacture_id}<br>
-                            <strong>Name:</strong> ${deviceName}<br>
-                            <strong>Last Seen:</strong> ${device.last_seen}<br>
-                        `;
-                        deviceList.appendChild(listItem);
-                    });
-
-                    // data.forEach(device => {
-                    //     const listItem = document.createElement('li');
-                    //     const deviceName = device.name || '(no name)';
-                    //     listItem.innerHTML = `
-                    //         <strong>Address:</strong> ${device.address}<br>
-                    //         <strong>Manufacture ID:</strong> ${device.manufacture_id}<br>
-                    //         <strong>Name:</strong> ${deviceName}<br>
-                    //         <strong>Last Seen:</strong> ${device.last_seen}<br>
-                    //     `;
-                    //     deviceList.appendChild(listItem);
-                    // });
-                })
-                .catch(error => console.error('Error fetching scanned devices:', error));
-        }
-
-        function updateLastUpdatedTime() {
-            const now = new Date();
-            const formattedTime = now.toLocaleString();
-            document.getElementById('lastUpdated').innerText = formattedTime;
-        }
-
-        function initializeHistogram() {
-            const ctx = document.getElementById('rssiChart').getContext('2d');
-            rssiChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [], // 初期化時には空のラベル
-                    datasets: []
-                },
-                options: {
-                    animation: false,
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'RSSI (dBm)'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'デバイス数'
-                            },
-                            beginAtZero: true
-                        }
-                    }
+      let deviceData = {} // RSSIデータを格納
+      let receiverPositions = [] // 受信デバイスの位置を格納
+      let rssiChart
+      
+      // ヒストグラム用の色の定義
+      const receiverColors = ['rgba(75, 192, 192, 0.6)', 'rgba(192, 75, 192, 0.6)', 'rgba(192, 192, 75, 0.6)', 'rgba(75, 192, 75, 0.6)']
+      
+      // 有効デバイス数を取得
+      function fetchValidDevices() {
+        fetch('/valid_devices')
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById('deviceCount').innerText = data.valid_device_count
+            updateLastUpdatedTime() // 最終更新時刻を更新
+          })
+          .catch((error) => console.error('Error fetching valid device count:', error))
+      }
+      
+      // デバイスの位置情報を取得
+      function fetchDevicePositions() {
+        fetch('/get_device_positions_and_receiver_positions')
+          .then((response) => response.json())
+          .then((data) => {
+            receiverPositions = data.receivers // 受信デバイスの位置を格納
+            updateDeviceMap(data) // 地図上にデバイスを表示
+          })
+          .catch((error) => console.error('Error fetching device positions:', error))
+      }
+      
+      // RSSIデータを取得してヒストグラムを更新
+      function fetchDeviceRSSI() {
+        fetch('/get_device_rssi_admin')
+          .then((response) => response.json())
+          .then((data) => {
+            deviceData = data.rssi_data // RSSIデータを格納
+            updateHistogram() // ヒストグラムを更新
+          })
+          .catch((error) => console.error('Error fetching device RSSI:', error))
+      }
+      
+      // スキャンされたデバイス情報を取得
+      function fetchScannedDevices() {
+        fetch('/scanned_devices')
+          .then((response) => response.json())
+          .then((data) => {
+            // macアドレスをキーにしてデバイス情報を表示
+            const deviceList = document.getElementById('deviceList')
+            deviceList.innerHTML = '' // リストをクリア
+      
+            Object.keys(data).forEach((mac_address) => {
+              const device = data[mac_address]
+              const listItem = document.createElement('li')
+              const deviceName = device.name || '(no name)'
+              listItem.innerHTML = `
+                                  <strong>Address:</strong> ${mac_address}<br>
+                                  <strong>Manufacture ID:</strong> ${device.manufacture_id}<br>
+                                  <strong>Name:</strong> ${deviceName}<br>
+                                  <strong>Last Seen:</strong> ${device.last_seen}<br>
+                              `
+              deviceList.appendChild(listItem)
+            })
+      
+            // data.forEach(device => {
+            //     const listItem = document.createElement('li');
+            //     const deviceName = device.name || '(no name)';
+            //     listItem.innerHTML = `
+            //         <strong>Address:</strong> ${device.address}<br>
+            //         <strong>Manufacture ID:</strong> ${device.manufacture_id}<br>
+            //         <strong>Name:</strong> ${deviceName}<br>
+            //         <strong>Last Seen:</strong> ${device.last_seen}<br>
+            //     `;
+            //     deviceList.appendChild(listItem);
+            // });
+          })
+          .catch((error) => console.error('Error fetching scanned devices:', error))
+      }
+      
+      function updateLastUpdatedTime() {
+        const now = new Date()
+        const formattedTime = now.toLocaleString()
+        document.getElementById('lastUpdated').innerText = formattedTime
+      }
+      
+      function initializeHistogram() {
+        const ctx = document.getElementById('rssiChart').getContext('2d')
+        rssiChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: [], // 初期化時には空のラベル
+            datasets: []
+          },
+          options: {
+            animation: false,
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'RSSI (dBm)'
                 }
-            });
-        }
-
-        function updateHistogram() {
-            
-            // const rssiRange = Array.from({ length: 21 }, (_, i) => -100 + i * 5);
-            // RSSIの範囲を2刻みで指定
-            // const rssiRange = Array.from({ length: 51 }, (_, i) => -100 + i * 2);
-            // RSSIの範囲を10刻みで指定
-            const rssiRange = Array.from({ length: 11 }, (_, i) => -100 + i * 10);
-
-            const receiverCounts = {}; // 各receiverごとのRSSIカウント
-
-            // 各送信デバイスのRSSIを確認して範囲ごとにカウント
-            Object.keys(deviceData).forEach(mac_address => {
-                const rssiData = deviceData[mac_address]['rssi_data'];
-                Object.keys(rssiData).forEach(device_id => {
-                    const rssi = rssiData[device_id].rssi;  // RSSIデータ
-                    for (let i = 0; i < rssiRange.length; i++) {
-                        if (rssi < rssiRange[i]) {
-                            if (!receiverCounts[device_id]){
-                                receiverCounts[device_id] = new Array(rssiRange.length).fill(0);
-                            }
-                            receiverCounts[device_id][i] += 1;
-                            break;
-                        }
-                    }
-                });
-            });
-
-            // ヒストグラムのデータセットを作成
-            const datasets = Object.keys(receiverCounts).map((receiverId, index) => ({
-                label: `Receiver ${receiverId}`,
-                data: receiverCounts[receiverId],
-                backgroundColor: receiverColors[index % receiverColors.length],
-                borderColor: receiverColors[index % receiverColors.length],
-                borderWidth: 1
-            }));
-
-            // ヒストグラムのデータを更新
-            rssiChart.data.labels = rssiRange.map((rssi, i) => `${rssi}dBm〜`);
-            rssiChart.data.datasets = datasets;
-            rssiChart.update(); // チャートを再描画
-        }
-
-        function updateDeviceMap(data) {
-            const ctx = document.getElementById('mapCanvas').getContext('2d');
-            const mapContainer = document.getElementById('mapContainer');
-            const mapWidth = mapContainer.offsetWidth;
-            const mapHeight = mapContainer.offsetHeight;
-
-            ctx.clearRect(0, 0, mapWidth, mapHeight); // キャンバスをクリア
-
-            // 受信デバイスの描画
-            data.receivers.forEach(device => {
-                const x = device.position.x * mapWidth;
-                const y = device.position.y * mapHeight;
-                ctx.fillStyle = 'red';
-                ctx.beginPath();
-                ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                ctx.fill();
-                ctx.fillText(`Receiver ${device.device_id}`, x + 10, y);
-            });
-
-            // 送信デバイスの描画
-            if (data.senders) {
-                data.senders.forEach(sender => {
-                    if(deviceData[sender.mac_address].name){
-                        const x = sender.position.x * mapWidth;
-                        const y = sender.position.y * mapHeight;
-                        ctx.fillStyle = 'rgba(0, 0, 128, 1)';
-                        ctx.beginPath();
-                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                        ctx.fill();
-                        ctx.fillText(deviceData[sender.mac_address].name, x + 10, y);
-                    }else{
-                        const x = sender.position.x * mapWidth;
-                        const y = sender.position.y * mapHeight;
-                        ctx.fillStyle = 'rgba(0, 128, 0, 0.2)';
-                        ctx.beginPath();
-                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                        ctx.fill();
-                    }
-                });
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'デバイス数'
+                },
+                beginAtZero: true
+              }
             }
+          }
+        })
+      }
+      
+      function updateHistogram() {
+        // const rssiRange = Array.from({ length: 21 }, (_, i) => -100 + i * 5);
+        // RSSIの範囲を2刻みで指定
+        // const rssiRange = Array.from({ length: 51 }, (_, i) => -100 + i * 2);
+        // RSSIの範囲を10刻みで指定
+        const rssiRange = Array.from({ length: 11 }, (_, i) => -100 + i * 10)
+      
+        const receiverCounts = {} // 各receiverごとのRSSIカウント
+      
+        // 各送信デバイスのRSSIを確認して範囲ごとにカウント
+        Object.keys(deviceData).forEach((mac_address) => {
+          const rssiData = deviceData[mac_address]['rssi_data']
+          Object.keys(rssiData).forEach((device_id) => {
+            const rssi = rssiData[device_id].rssi // RSSIデータ
+            for (let i = 0; i < rssiRange.length; i++) {
+              if (rssi < rssiRange[i]) {
+                if (!receiverCounts[device_id]) {
+                  receiverCounts[device_id] = new Array(rssiRange.length).fill(0)
+                }
+                receiverCounts[device_id][i] += 1
+                break
+              }
+            }
+          })
+        })
+      
+        // ヒストグラムのデータセットを作成
+        const datasets = Object.keys(receiverCounts).map((receiverId, index) => ({
+          label: `Receiver ${receiverId}`,
+          data: receiverCounts[receiverId],
+          backgroundColor: receiverColors[index % receiverColors.length],
+          borderColor: receiverColors[index % receiverColors.length],
+          borderWidth: 1
+        }))
+      
+        // ヒストグラムのデータを更新
+        rssiChart.data.labels = rssiRange.map((rssi, i) => `${rssi}dBm〜`)
+        rssiChart.data.datasets = datasets
+        rssiChart.update() // チャートを再描画
+      }
+      
+      function updateDeviceMap(data) {
+        const ctx = document.getElementById('mapCanvas').getContext('2d')
+        const mapContainer = document.getElementById('mapContainer')
+        const mapWidth = mapContainer.offsetWidth
+        const mapHeight = mapContainer.offsetHeight
+      
+        ctx.clearRect(0, 0, mapWidth, mapHeight) // キャンバスをクリア
+      
+        // 受信デバイスの描画
+        data.receivers.forEach((device) => {
+          const x = device.position.x * mapWidth
+          const y = device.position.y * mapHeight
+          ctx.fillStyle = 'red'
+          ctx.beginPath()
+          ctx.arc(x, y, 10, 0, 2 * Math.PI)
+          ctx.fill()
+          ctx.fillText(`Receiver ${device.device_id}`, x + 10, y)
+        })
+      
+        // 送信デバイスの描画
+        if (data.senders) {
+          data.senders.forEach((sender) => {
+            if (deviceData[sender.mac_address].name) {
+              const x = sender.position.x * mapWidth
+              const y = sender.position.y * mapHeight
+              ctx.fillStyle = 'rgba(0, 0, 128, 1)'
+              ctx.beginPath()
+              ctx.arc(x, y, 10, 0, 2 * Math.PI)
+              ctx.fill()
+              ctx.fillText(deviceData[sender.mac_address].name, x + 10, y)
+            } else {
+              const x = sender.position.x * mapWidth
+              const y = sender.position.y * mapHeight
+              ctx.fillStyle = 'rgba(0, 128, 0, 0.2)'
+              ctx.beginPath()
+              ctx.arc(x, y, 10, 0, 2 * Math.PI)
+              ctx.fill()
+            }
+          })
         }
-
-        window.onload = function () {
-            initializeHistogram(); // ヒストグラムを初期化
-            fetchValidDevices(); // 有効デバイス数を取得
-            fetchDevicePositions(); // デバイス位置取得
-            fetchDeviceRSSI(); // RSSIデータを取得
-            fetchScannedDevices(); // スキャンされたデバイス情報を取得
-            setInterval(fetchValidDevices, 500); // 5秒ごとに有効デバイス数を更新
-            setInterval(fetchDevicePositions, 500); // 5秒ごとに位置データを更新
-            setInterval(fetchDeviceRSSI, 500); // 5秒ごとにRSSIデータを更新
-            setInterval(fetchScannedDevices, 500); // 5秒ごとにスキャンされたデバイス情報を更新
-        };
+      }
+      
+      window.onload = function () {
+        initializeHistogram() // ヒストグラムを初期化
+        fetchValidDevices() // 有効デバイス数を取得
+        fetchDevicePositions() // デバイス位置取得
+        fetchDeviceRSSI() // RSSIデータを取得
+        fetchScannedDevices() // スキャンされたデバイス情報を取得
+        setInterval(fetchValidDevices, 500) // 5秒ごとに有効デバイス数を更新
+        setInterval(fetchDevicePositions, 500) // 5秒ごとに位置データを更新
+        setInterval(fetchDeviceRSSI, 500) // 5秒ごとにRSSIデータを更新
+        setInterval(fetchScannedDevices, 500) // 5秒ごとにスキャンされたデバイス情報を更新
+      }
     </script>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>Device Dashboard</h1>
-    <p>直近5分間の有効デバイス数: <span id="deviceCount">0</span></p>
-    <p>最終更新時刻: <span id="lastUpdated">未更新</span></p>
+    <p>
+      直近5分間の有効デバイス数: <span id="deviceCount">0</span>
+    </p>
+    <p>
+      最終更新時刻: <span id="lastUpdated">未更新</span>
+    </p>
 
     <h2>RSSIヒストグラム</h2>
     <canvas id="rssiChart" width="400" height="200"></canvas> <!-- ヒストグラムを表示するキャンバス -->
 
     <h2>デバイスの分布</h2>
     <div id="mapContainer" style="position: relative; width: 1000px; height: 700px;">
-        <img src="/static/map_image.png" style="position: absolute; width: 100%; height: 100%;">
-        <canvas id="mapCanvas" width="1000" height="700" style="position: absolute;"></canvas>
+      <img src="/static/map_image.png" style="position: absolute; width: 100%; height: 100%;" />
+      <canvas id="mapCanvas" width="1000" height="700" style="position: absolute;"></canvas>
     </div>
 
     <h2>30分以内にスキャンされたデバイス情報:</h2>
     <ul id="deviceList">
-        <!-- デバイス情報はここに表示される -->
+      <!-- デバイス情報はここに表示される -->
     </ul>
 
     <h2>Links</h2>
     <ul>
-        <li><a href="/">Home</a></li>
+      <li>
+        <a href="/">Home</a>
+      </li>
     </ul>
-</body>
-
+  </body>
 </html>
