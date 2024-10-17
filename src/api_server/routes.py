@@ -138,9 +138,3 @@ class DeviceAPI(Flask):
 
     def dashboard(self):
         return render_template("dashboard.html")
-
-# Flaskアプリケーションの作成とルートの登録
-app = DeviceAPI(__name__)
-
-if __name__ == "__main__":
-    app.run(debug=True)
