@@ -1,4 +1,3 @@
-from flask import Flask
 from routes import DeviceAPI
 
 app = DeviceAPI(__name__)

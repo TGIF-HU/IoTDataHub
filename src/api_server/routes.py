@@ -56,8 +56,9 @@ class DeviceAPI(Flask):
         self.add_url_rule("/get_receiver_positions", view_func=self.get_receiver_positions, methods=["GET"])
         self.add_url_rule("/get_device_rssi_admin", view_func=self.get_device_rssi_admin, methods=["GET"])
         self.add_url_rule("/scanned_devices", view_func=self.scanned_devices, methods=["GET"])
-        self.add_url_rule("/setup", view_func=self.setup)
+        
         self.add_url_rule("/", view_func=self.index)
+        self.add_url_rule("/setup", view_func=self.setup)
         self.add_url_rule("/dashboard", view_func=self.dashboard)
 
     def post_json(self):
