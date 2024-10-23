@@ -24,8 +24,8 @@ class DeviceAPI(Flask):
 
         self.add_url_rule("/api/device",
                           view_func=self.post_device, methods=["POST"])
-        # self.add_url_rule("/valid_devices",
-        #                   view_func=self.valid_devices, methods=["GET"])
+        # self.add_url_rule("/api/valid_devices",
+        #                   view_func=self.get_valid_devices, methods=["GET"])
         # self.add_url_rule("/save_receiver_positions",
         #                   view_func=self.save_receiver_positions, methods=["POST"])
         # self.add_url_rule("/get_device_positions_and_receiver_positions",
@@ -60,16 +60,21 @@ class DeviceAPI(Flask):
 
         # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
         for d in self.data_logger:
-            if d == data:
+            if d == data:  # デバイスが一致(__eq__)
+                print(self.data_logger.to_dict())
                 d.update(data)
                 return jsonify({"status": "success"}), 200
 
         # デバイスが初めてスキャンされた場合は新しいエントリを作成
-        self.data_logger.append(data)
+        self.data_logger.log(data)
         # TODO: cleanup_old_data() の機能を含んでいない
+        print(self.data_logger.to_dict())
         return jsonify({"status": "success"}), 200
 
-    # def valid_devices(self):
+    # def get_valid_devices(self):
+    #     VALID_DEVICE_CHECK_PERIOD = timedelta(minutes=5)
+    #     cutoff_time = datetime.now(tz=timezone.utc) - VALID_DEVICE_CHECK_PERIOD
+
     #     valid_device_set = get_valid_devices()
     #     return jsonify({"valid_device_count": len(valid_device_set)})
 

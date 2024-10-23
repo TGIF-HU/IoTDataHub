@@ -69,9 +69,6 @@ class DeviceLogger:
         else:
             raise StopIteration
 
-    def append(self, data: DeviceData):
-        self.data.append(data)
-
     def log(self, data: DeviceData):
         self.data.append(data)
 
