@@ -12,7 +12,6 @@
 # RECEIVER_POSITIONS_FILE = "receiver_positions.json"
 
 # # RSSIのしきい値と時間設定
-# RSSI_THRESHOLD = -200
 # SCAN_TIMEOUT = timedelta(minutes=30)
 # VALID_DEVICE_CHECK_PERIOD = timedelta(minutes=5)
 
@@ -87,50 +86,3 @@
 #             )
 
 #     return sender_positions
-
-
-# # RSSIデータをMACアドレスごとにグループ化
-# def group_rssi_data_by_mac_address():
-#     # grouped_data = {}
-#     # print("Device data:")
-#     # print(device_data)
-
-#     # for mac_address, entry in device_data.items():
-#     #     timestamp, rssi, device_id, manufacture_id, name = entry
-#     #     if mac_address not in grouped_data:
-#     #         grouped_data[mac_address] = []
-
-#     #     grouped_data[mac_address].append({
-#     #         "device_id": device_id,
-#     #         "rssi": rssi,
-#     #         "timestamp": timestamp
-#     #     })
-
-#     # print("Grouped RSSI data:")
-#     # print(grouped_data)
-
-#     return device_data
-
-
-# # 古いデバイスデータを削除する
-# def cleanup_old_data():
-#     cutoff_time = datetime.now(tz=timezone.utc) - SCAN_TIMEOUT
-#     for address in list(device_data.keys()):
-#         timestamp = device_data[address]["last_seen"]
-#         if timestamp < cutoff_time:
-#             del device_data[address]
-
-
-# # 有効デバイスをチェックする関数を修正
-# def get_valid_devices():
-#     cutoff_time = datetime.now(tz=timezone.utc) - VALID_DEVICE_CHECK_PERIOD
-#     valid_devices = set()
-
-#     # 各デバイスに対して、一定のRSSI値を満たすか確認
-#     for address, entry in device_data.items():
-#         timestamp = entry["last_seen"]
-#         rssi = max(d["rssi"] for d in device_data[address]["rssi_data"].values())
-#         if (timestamp > cutoff_time) and (rssi >= RSSI_THRESHOLD):
-#             valid_devices.add(address)
-
-#     return valid_devices

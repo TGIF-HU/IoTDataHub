@@ -15,7 +15,7 @@
       
       // 有効デバイス数を取得
       function fetchValidDevices() {
-        fetch('/valid_devices')
+        fetch('/api/valid_devices')
           .then((response) => response.json())
           .then((data) => {
             document.getElementById('deviceCount').innerText = data.valid_device_count
@@ -48,40 +48,43 @@
       
       // スキャンされたデバイス情報を取得
       function fetchScannedDevices() {
-        fetch('/scanned_devices')
+        fetch('/api/scanned_devices')
           .then((response) => response.json())
           .then((data) => {
-            // macアドレスをキーにしてデバイス情報を表示
-            const deviceList = document.getElementById('deviceList')
-            deviceList.innerHTML = '' // リストをクリア
+            const deviceList = document.getElementById('deviceList');
+            deviceList.innerHTML = ''; // リストをクリア
       
-            Object.keys(data).forEach((mac_address) => {
-              const device = data[mac_address]
-              const listItem = document.createElement('li')
-              const deviceName = device.name || '(no name)'
+            data.forEach((device) => {
+              const listItem = document.createElement('li');
+              const deviceName = device.name || '(no name)';
+              const manufactureId = device.manufacture_id.join(', ');
+              const lastSeen = new Date(device.last_seen).toLocaleString();
+              
+              // RSSIデータを取得し、フォーマットする
+              const rssiEntries = Object.entries(device.rssi_data).map(
+                ([device_id, rssiData]) =>
+                  `<li>Device ID ${device_id}</li>
+                  <li>RSSI ${rssiData.rssi}</li>
+                  <li>Timestamp ${new Date(rssiData.timestamp).toLocaleString()}</li>`
+              ).join('');
+      
               listItem.innerHTML = `
-                                  <strong>Address:</strong> ${mac_address}<br>
-                                  <strong>Manufacture ID:</strong> ${device.manufacture_id}<br>
-                                  <strong>Name:</strong> ${deviceName}<br>
-                                  <strong>Last Seen:</strong> ${device.last_seen}<br>
-                              `
-              deviceList.appendChild(listItem)
-            })
-      
-            // data.forEach(device => {
-            //     const listItem = document.createElement('li');
-            //     const deviceName = device.name || '(no name)';
-            //     listItem.innerHTML = `
-            //         <strong>Address:</strong> ${device.address}<br>
-            //         <strong>Manufacture ID:</strong> ${device.manufacture_id}<br>
-            //         <strong>Name:</strong> ${deviceName}<br>
-            //         <strong>Last Seen:</strong> ${device.last_seen}<br>
-            //     `;
-            //     deviceList.appendChild(listItem);
-            // });
+                <strong>MAC Address:</strong> ${device.mac_address}<br>
+                <strong>Manufacture ID:</strong> [${manufactureId}]<br>
+                <strong>Name:</strong> ${deviceName}<br>
+                <strong>Last Seen:</strong> ${lastSeen}<br>
+                <strong>RSSI Data:</strong><br>
+                <ul>${rssiEntries}</ul>
+              `;
+              
+              deviceList.appendChild(listItem);
+            });
           })
-          .catch((error) => console.error('Error fetching scanned devices:', error))
+          .catch((error) => {
+            console.error('Error fetching devices:', error);
+          });
       }
+      
       
       function updateLastUpdatedTime() {
         const now = new Date()
@@ -208,8 +211,8 @@
         fetchDeviceRSSI() // RSSIデータを取得
         fetchScannedDevices() // スキャンされたデバイス情報を取得
         setInterval(fetchValidDevices, 500) // 5秒ごとに有効デバイス数を更新
-        setInterval(fetchDevicePositions, 500) // 5秒ごとに位置データを更新
-        setInterval(fetchDeviceRSSI, 500) // 5秒ごとにRSSIデータを更新
+        // setInterval(fetchDevicePositions, 500) // 5秒ごとに位置データを更新
+        // setInterval(fetchDeviceRSSI, 500) // 5秒ごとにRSSIデータを更新
         setInterval(fetchScannedDevices, 500) // 5秒ごとにスキャンされたデバイス情報を更新
       }
     </script>
@@ -233,7 +236,7 @@
       <canvas id="mapCanvas" width="1000" height="700" style="position: absolute;"></canvas>
     </div>
 
-    <h2>30分以内にスキャンされたデバイス情報:</h2>
+    <h2>5分以内にスキャンされたデバイス情報:</h2>
     <ul id="deviceList">
       <!-- デバイス情報はここに表示される -->
     </ul>

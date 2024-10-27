@@ -6,7 +6,7 @@
     <title>Device Distribution</title>
     <script>
       function fetchDeviceData() {
-        fetch('/get_device_positions')
+        fetch('/api/valid_devices')
           .then((response) => response.json())
           .then((data) => {
             updateDeviceCount(data.sender ? 1 : 0) // 送信デバイスがあればデバイス数は1

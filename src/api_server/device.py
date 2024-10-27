@@ -57,11 +57,11 @@ class DeviceData:
 
 class DeviceLogger:
     def __init__(self):
-        self.index = 0
         self.data = []
 
-    # forで回せるようにする
+    # forで回せるようにする(初期化)
     def __iter__(self):
+        self.index = 0
         return self
 
     def __next__(self):
