@@ -60,16 +60,12 @@ class DeviceAPI(Flask):
             return jsonify({"status": "error", "message": str(e)}), 400
 
         # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
-        print(f"入力: {data.to_dict()}")
         for d in self.data_logger:
-            print(f"比較対象: {d.to_dict()}")
             if d == data:  # デバイスが一致(__eq__)
-                print("既存デバイス")
                 d.update(data)
                 return jsonify({"status": "success"}), 200
 
         # デバイスが初めてスキャンされた場合は新しいエントリを作成
-        print("新規デバイス")
         self.data_logger.log(data)
         # 古いデータを削除
         self.data_logger.cleanup_old_data()
