@@ -1,6 +1,4 @@
-let deviceData = {} // RSSIデータを格納
 let receiverPositions = [] // 受信デバイスの位置を格納
-let rssiChart
 
 // ヒストグラム用の色の定義
 const receiverColors = ['rgba(75, 192, 192, 0.6)', 'rgba(192, 75, 192, 0.6)', 'rgba(192, 192, 75, 0.6)', 'rgba(75, 192, 75, 0.6)']
@@ -11,7 +9,9 @@ function fetchValidDevices() {
     .then((response) => response.json())
     .then((data) => {
       document.getElementById('deviceCount').innerText = data.valid_device_count
-      updateLastUpdatedTime() // 最終更新時刻を更新
+      const now = new Date()
+      const formattedTime = now.toLocaleString()
+      document.getElementById('lastUpdated').innerText = formattedTime
     })
     .catch((error) => console.error('Error fetching valid device count:', error))
 }
@@ -29,10 +29,10 @@ function fetchDevicePositions() {
 
 // RSSIデータを取得してヒストグラムを更新
 function fetchDeviceRSSI() {
-  fetch('/get_device_rssi_admin')
+  fetch('/api/rssi')
     .then((response) => response.json())
     .then((data) => {
-      deviceData = data.rssi_data // RSSIデータを格納
+      deviceData = data // RSSIデータを格納
       updateHistogram() // ヒストグラムを更新
     })
     .catch((error) => console.error('Error fetching device RSSI:', error))
@@ -77,13 +77,6 @@ function fetchScannedDevices() {
     });
 }
 
-
-function updateLastUpdatedTime() {
-  const now = new Date()
-  const formattedTime = now.toLocaleString()
-  document.getElementById('lastUpdated').innerText = formattedTime
-}
-
 function initializeHistogram() {
   const ctx = document.getElementById('rssiChart').getContext('2d')
   rssiChart = new Chart(ctx, {
@@ -106,7 +99,10 @@ function initializeHistogram() {
             display: true,
             text: 'デバイス数'
           },
-          beginAtZero: true
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1 // 自然数単位で表示
+          }
         }
       }
     }
@@ -114,25 +110,17 @@ function initializeHistogram() {
 }
 
 function updateHistogram() {
-  // const rssiRange = Array.from({ length: 21 }, (_, i) => -100 + i * 5);
-  // RSSIの範囲を2刻みで指定
-  // const rssiRange = Array.from({ length: 51 }, (_, i) => -100 + i * 2);
   // RSSIの範囲を10刻みで指定
   const rssiRange = Array.from({ length: 11 }, (_, i) => -100 + i * 10)
-
-  const receiverCounts = {} // 各receiverごとのRSSIカウント
+  const receiverCounts = new Array(rssiRange.length).fill(0) // RSSIごとのカウント
 
   // 各送信デバイスのRSSIを確認して範囲ごとにカウント
-  Object.keys(deviceData).forEach((mac_address) => {
-    const rssiData = deviceData[mac_address]['rssi_data']
-    Object.keys(rssiData).forEach((device_id) => {
-      const rssi = rssiData[device_id].rssi // RSSIデータ
+  Object.keys(deviceData).forEach((receiverId) => {
+    const rssiArray = deviceData[receiverId] // 各デバイスのRSSIデータ配列
+    rssiArray.forEach((rssi) => {
       for (let i = 0; i < rssiRange.length; i++) {
         if (rssi < rssiRange[i]) {
-          if (!receiverCounts[device_id]) {
-            receiverCounts[device_id] = new Array(rssiRange.length).fill(0)
-          }
-          receiverCounts[device_id][i] += 1
+          receiverCounts[i] += 1
           break
         }
       }
@@ -140,16 +128,16 @@ function updateHistogram() {
   })
 
   // ヒストグラムのデータセットを作成
-  const datasets = Object.keys(receiverCounts).map((receiverId, index) => ({
-    label: `Receiver ${receiverId}`,
-    data: receiverCounts[receiverId],
-    backgroundColor: receiverColors[index % receiverColors.length],
-    borderColor: receiverColors[index % receiverColors.length],
+  const datasets = [{
+    label: 'Device RSSI Distribution',
+    data: receiverCounts,
+    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+    borderColor: 'rgba(75, 192, 192, 1)',
     borderWidth: 1
-  }))
+  }]
 
   // ヒストグラムのデータを更新
-  rssiChart.data.labels = rssiRange.map((rssi, i) => `${rssi}dBm〜`)
+  rssiChart.data.labels = rssiRange.map((rssi) => `${rssi}dBm〜`)
   rssiChart.data.datasets = datasets
   rssiChart.update() // チャートを再描画
 }
@@ -204,6 +192,6 @@ window.onload = function () {
   fetchScannedDevices() // スキャンされたデバイス情報を取得
   setInterval(fetchValidDevices, 500) // 5秒ごとに有効デバイス数を更新
   // setInterval(fetchDevicePositions, 500) // 5秒ごとに位置データを更新
-  // setInterval(fetchDeviceRSSI, 500) // 5秒ごとにRSSIデータを更新
+  setInterval(fetchDeviceRSSI, 500) // 5秒ごとにRSSIデータを更新
   setInterval(fetchScannedDevices, 500) // 5秒ごとにスキャンされたデバイス情報を更新
 }

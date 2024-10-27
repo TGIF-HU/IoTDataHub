@@ -1,8 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from device import *
 # from utils import (
-# device_data,
-# group_rssi_data_by_mac_address,
 # receiver_positions,
 # save_receiver_positions_to_file,
 # update_sender_positions,
@@ -26,6 +24,8 @@ class DeviceAPI(Flask):
                           view_func=self.get_scanned_devices, methods=["GET"])
         self.add_url_rule("/api/valid_devices",
                           view_func=self.get_valid_devices, methods=["GET"])
+        self.add_url_rule("/api/rssi",
+                          view_func=self.get_rssi, methods=["GET"])
         # self.add_url_rule("/save_receiver_positions",
         #                   view_func=self.save_receiver_positions, methods=["POST"])
         # self.add_url_rule("/get_device_positions_and_receiver_positions",
@@ -34,8 +34,6 @@ class DeviceAPI(Flask):
         #                   view_func=self.get_device_positions, methods=["GET"])
         # self.add_url_rule("/get_receiver_positions",
         #                   view_func=self.get_receiver_positions, methods=["GET"])
-        # self.add_url_rule("/get_device_rssi_admin",
-        #                   view_func=self.get_device_rssi_admin, methods=["GET"])
 
     def index(self):
         return render_template("index.html")
@@ -78,11 +76,19 @@ class DeviceAPI(Flask):
     def get_valid_devices(self):
         return jsonify({"valid_device_count": self.data_logger.valid_devices_length()})
 
-    # def get_device_rssi_admin(self):
-    #     grouped_data = group_rssi_data_by_mac_address()
-    #     return jsonify({
-    #         "rssi_data": grouped_data
-    #     })
+    def get_rssi(self):
+        # 出力例:
+        # curl -X GET  http://192.168.2.105:5050/api/rssi
+        # {"1":[-79,-83,-95,-89,-73,-95,-72,-81,-88,-94,-96,-100,-96,-76,-99,-98]}
+        device_ids = []
+        rssi_data = {}
+        for d in self.data_logger:
+            if d.device_id not in device_ids:
+                device_ids.append(d.device_id)
+                rssi_data[d.device_id] = [d.rssi]
+            else:
+                rssi_data[d.device_id].append(d.rssi)
+        return jsonify(rssi_data)
 
     # def save_receiver_positions(self):
     #     if request.is_json:
