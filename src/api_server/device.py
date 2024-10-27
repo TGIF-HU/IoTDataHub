@@ -15,7 +15,7 @@ class DeviceData:
         time_str = json_data.get("time")
         # TODO "%Y-%m-%dT%H:%M:%SZ"か"%Y-%m-%dT%H:%M:%S.%fZ"か
         self.timestamp = datetime.strptime(
-            time_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
 
         if self.device_id is None and self.mac_address is None and self.rssi is None and self.timestamp is None:
             raise JsonElementNotFoundException
@@ -46,10 +46,13 @@ class DeviceData:
         }
 
     def update(self, other):
-        self.rssi = other.rssi
-        self.timestamp = other.timestamp
-        # self.name = other.name # おそらく不変
-        # self.manufacture_id = other.manufacture_id
+        if isinstance(other, self.__class__):
+            self.rssi = other.rssi
+            self.timestamp = other.timestamp
+            self.name = other.name  # おそらく不変
+            self.manufacture_id = other.manufacture_id  # おそらく不変
+        else:
+            raise ValueError("Invalid data type")
 
 
 class DeviceLogger:
@@ -74,6 +77,15 @@ class DeviceLogger:
 
     def to_dict(self):
         return [d.to_dict() for d in self.data]
+
+    def cleanup_old_data(self):
+        CLEANUP_TIME = timedelta(minutes=5)  # TODO: 30分のほうがいい？
+        cutoff_time = datetime.now(tz=timezone.utc) - CLEANUP_TIME
+        self.data = [d for d in self.data if d.timestamp > cutoff_time]
+
+    def valid_devices_length(self) -> int:
+        valid_devices = set([d.mac_address for d in self.data])
+        return len(valid_devices)
 
 
 class NotJsonException(Exception):
