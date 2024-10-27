@@ -29,7 +29,8 @@ class DeviceData:
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return (self.device_id == other.device_id) and (self.mac_address == other.mac_address)
-        return False
+        else:
+            raise ValueError("Invalid data type")
 
     def to_dict(self):
         return {
