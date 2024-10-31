@@ -55,12 +55,12 @@ function fetchScannedDevices() {
         listItem.innerHTML = `
           <strong>Device ID:</strong> ${device.device_id}<br>
           <strong>MAC Address:</strong> ${device.mac_address}<br>
-          <strong>Manufacture ID:</strong> ${manufactureId}<br>
+          <strong>Manufacture ID:</strong> [${manufactureId}]<br>
           <strong>Name:</strong> ${deviceName}<br>
           <strong>Timestamp:</strong> ${timestamp}<br>
           <strong>RSSI:</strong> ${device.rssi} dBm<br>
         `;
-        
+
         deviceList.appendChild(listItem);
       });
     })
