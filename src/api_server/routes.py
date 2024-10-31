@@ -1,11 +1,9 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
 from device import *
-# from utils import (
-# receiver_positions,
-# save_receiver_positions_to_file,
-# update_sender_positions,
-# )
+from building import load_building_from_toml
 
+MAP_FILE = 'cafeteria.toml'
+OUTPUT_FILE = 'cafeteria.svg'
 
 class DeviceAPI(Flask):
     def __init__(self, import_name):
@@ -18,7 +16,6 @@ class DeviceAPI(Flask):
         self.add_url_rule("/dashboard", view_func=self.dashboard)
         self.add_url_rule("/histgram", view_func=self.histgram)
         self.add_url_rule("/scanned_devices", view_func=self.scanned_devices)
-        # self.add_url_rule("/setup", view_func=self.setup)
 
         self.add_url_rule("/api/device",
                           view_func=self.post_device, methods=["POST"])
@@ -28,6 +25,8 @@ class DeviceAPI(Flask):
                           view_func=self.get_valid_devices, methods=["GET"])
         self.add_url_rule("/api/rssi",
                           view_func=self.get_rssi, methods=["GET"])
+        self.add_url_rule("/api/devices_map",
+                          view_func=self.get_devices_map, methods=["GET"])
         # self.add_url_rule("/save_receiver_positions",
         #                   view_func=self.save_receiver_positions, methods=["POST"])
         # self.add_url_rule("/get_device_positions_and_receiver_positions",
@@ -48,9 +47,6 @@ class DeviceAPI(Flask):
     
     def scanned_devices(self):
         return render_template("scanned_devices.html")
-
-    # def setup(self):
-    #     return render_template("setup.html")
 
     def post_device(self):
         try:
@@ -97,6 +93,12 @@ class DeviceAPI(Flask):
             else:
                 rssi_data[d.device_id].append(d.rssi)
         return jsonify(rssi_data)
+
+    def get_devices_map(self):
+        building = load_building_from_toml(MAP_FILE)
+        svg_data = building.to_svg(OUTPUT_FILE)
+        print(svg_data)
+        return Response(svg_data, mimetype='image/svg+xml')
 
     # def save_receiver_positions(self):
     #     if request.is_json:

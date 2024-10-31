@@ -21,7 +21,7 @@ class Building:
     def __repr__(self):
         return f"Building(walls={self.walls}, rooms={self.rooms})"
 
-    def to_svg(self, filename):
+    def to_svg(self, filename: str) -> str:
         dwg = svgwrite.Drawing(filename, profile='tiny')
         max_y = max([y for _, y in self.walls])
         # Draw building
@@ -34,7 +34,7 @@ class Building:
             room_wall_points = [(x, -y + max_y) for x, y in room.walls]
             dwg.add(dwg.polygon(points=room_wall_points, fill=color))
 
-        dwg.save()
+        return dwg.tostring()
 
 
 # TOMLファイルからビルディング情報を読み込む
@@ -50,8 +50,3 @@ def load_building_from_toml(file_path):
         rooms.append(room)
 
     return Building(walls=building_walls, rooms=rooms)
-
-
-# SVGの生成
-building = load_building_from_toml('cafeteria.toml')
-building.to_svg('cafeteria.svg')
