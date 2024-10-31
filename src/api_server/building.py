@@ -37,7 +37,7 @@ class Building:
         dwg.save()
 
 
-# Load data from TOML file
+# TOMLファイルからビルディング情報を読み込む
 def load_building_from_toml(file_path):
     with open(file_path, 'r') as file:
         data = toml.load(file)
