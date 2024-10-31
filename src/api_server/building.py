@@ -21,7 +21,7 @@ class Building:
         return f"Building(walls={self.walls}, rooms={self.rooms})"
 
 
-# Load data from TOML file
+# TOMLファイルからビルディング情報を読み込む
 def load_building_from_toml(file_path):
     with open(file_path, 'r') as file:
         data = toml.load(file)
@@ -33,10 +33,3 @@ def load_building_from_toml(file_path):
         rooms.append(room)
 
     return Building(walls=building_walls, rooms=rooms)
-
-
-# Create the building and rooms based on the TOML file
-building = load_building_from_toml('cafeteria.toml')
-
-# Print the building representation
-print(building)
