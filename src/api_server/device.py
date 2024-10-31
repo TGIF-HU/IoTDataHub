@@ -35,15 +35,11 @@ class DeviceData:
     def to_dict(self):
         return {
             "name": self.name,
+            "device_id": self.device_id,
             "mac_address": self.mac_address,
+            "rssi": self.rssi,
+            "timestamp": self.timestamp,
             "manufacture_id": self.manufacture_id,
-            "last_seen": self.timestamp,
-            "rssi_data": {
-                self.device_id: {
-                    "rssi": self.rssi,
-                    "timestamp": self.timestamp
-                }
-            }
         }
 
     def update(self, other):
@@ -77,7 +73,9 @@ class DeviceLogger:
         self.data.append(data)
 
     def to_dict(self):
-        return [d.to_dict() for d in self.data]
+        d_dict = [d.to_dict() for d in self.data]
+        sorted_dict = sorted(d_dict, key=lambda x: x["timestamp"], reverse=True)
+        return sorted_dict
 
     def cleanup_old_data(self):
         CLEANUP_TIME = timedelta(minutes=5)  # TODO: 30分のほうがいい？

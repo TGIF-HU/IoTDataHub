@@ -49,26 +49,18 @@ function fetchScannedDevices() {
       data.forEach((device) => {
         const listItem = document.createElement('li');
         const deviceName = device.name || '(no name)';
-        const manufactureId = device.manufacture_id.join(', ');
-        const lastSeen = new Date(device.last_seen).toLocaleString();
-
-        // RSSIデータを取得し、フォーマットする
-        const rssiEntries = Object.entries(device.rssi_data).map(
-          ([device_id, rssiData]) =>
-            `<li>Device ID ${device_id}</li>
-            <li>RSSI ${rssiData.rssi}</li>
-            <li>Timestamp ${new Date(rssiData.timestamp).toLocaleString()}</li>`
-        ).join('');
+        const manufactureId = device.manufacture_id;
+        const timestamp = new Date(device.timestamp).toLocaleString();
 
         listItem.innerHTML = `
+          <strong>Device ID:</strong> ${device.device_id}<br>
           <strong>MAC Address:</strong> ${device.mac_address}<br>
-          <strong>Manufacture ID:</strong> [${manufactureId}]<br>
+          <strong>Manufacture ID:</strong> ${manufactureId}<br>
           <strong>Name:</strong> ${deviceName}<br>
-          <strong>Last Seen:</strong> ${lastSeen}<br>
-          <strong>RSSI Data:</strong><br>
-          <ul>${rssiEntries}</ul>
+          <strong>Timestamp:</strong> ${timestamp}<br>
+          <strong>RSSI:</strong> ${device.rssi} dBm<br>
         `;
-
+        
         deviceList.appendChild(listItem);
       });
     })
