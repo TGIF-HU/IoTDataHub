@@ -16,6 +16,7 @@ class DeviceAPI(Flask):
     def register_routes(self):
         self.add_url_rule("/", view_func=self.index)
         self.add_url_rule("/dashboard", view_func=self.dashboard)
+        self.add_url_rule("/histgram", view_func=self.histgram)
         # self.add_url_rule("/setup", view_func=self.setup)
 
         self.add_url_rule("/api/device",
@@ -40,6 +41,9 @@ class DeviceAPI(Flask):
 
     def dashboard(self):
         return render_template("dashboard.html")
+    
+    def histgram(self):
+        return render_template("histgram.html")
 
     # def setup(self):
     #     return render_template("setup.html")
