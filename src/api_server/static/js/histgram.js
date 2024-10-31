@@ -77,6 +77,19 @@ function updateHistogram() {
     rssiChart.update() // チャートを再描画
 }
 
+// 有効デバイス数を取得
+function fetchValidDevices() {
+    fetch('/api/valid_devices')
+        .then((response) => response.json())
+        .then((data) => {
+            document.getElementById('deviceCount').innerText = data.valid_device_count
+            const now = new Date()
+            const formattedTime = now.toLocaleString()
+            document.getElementById('lastUpdated').innerText = formattedTime
+        })
+        .catch((error) => console.error('Error fetching valid device count:', error))
+}
+
 // スキャンされたデバイス情報を取得
 function fetchScannedDevices() {
     fetch('/api/scanned_devices')
@@ -111,6 +124,7 @@ function fetchScannedDevices() {
 
 window.onload = function () {
     initializeHistogram() // ヒストグラムを初期化
+    setInterval(fetchValidDevices, 500) // 5秒ごとに有効デバイス数を更新
     setInterval(fetchDeviceRSSI, 500) // 5秒ごとにRSSIデータを更新
     setInterval(fetchScannedDevices, 500) // 5秒ごとにスキャンされたデバイス情報を更新
 }

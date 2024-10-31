@@ -1,16 +1,3 @@
-// 有効デバイス数を取得
-function fetchValidDevices() {
-  fetch('/api/valid_devices')
-    .then((response) => response.json())
-    .then((data) => {
-      document.getElementById('deviceCount').innerText = data.valid_device_count
-      const now = new Date()
-      const formattedTime = now.toLocaleString()
-      document.getElementById('lastUpdated').innerText = formattedTime
-    })
-    .catch((error) => console.error('Error fetching valid device count:', error))
-}
-
 // デバイスの位置情報を取得
 // function fetchDevicePositions() {
 //   fetch('/get_device_positions_and_receiver_positions')
@@ -66,8 +53,6 @@ function updateDeviceMap(data) {
 }
 
 window.onload = function () {
-  fetchValidDevices() // 有効デバイス数を取得
   // fetchDevicePositions() // デバイス位置取得
-  setInterval(fetchValidDevices, 500) // 5秒ごとに有効デバイス数を更新
   // setInterval(fetchDevicePositions, 500) // 5秒ごとに位置データを更新
 }
