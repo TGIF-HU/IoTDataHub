@@ -17,6 +17,7 @@ class DeviceAPI(Flask):
         self.add_url_rule("/", view_func=self.index)
         self.add_url_rule("/dashboard", view_func=self.dashboard)
         self.add_url_rule("/histgram", view_func=self.histgram)
+        self.add_url_rule("/scanned_devices", view_func=self.scanned_devices)
         # self.add_url_rule("/setup", view_func=self.setup)
 
         self.add_url_rule("/api/device",
@@ -44,6 +45,9 @@ class DeviceAPI(Flask):
     
     def histgram(self):
         return render_template("histgram.html")
+    
+    def scanned_devices(self):
+        return render_template("scanned_devices.html")
 
     # def setup(self):
     #     return render_template("setup.html")
