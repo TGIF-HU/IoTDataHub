@@ -10,6 +10,7 @@ dependencies = [
     "numpy>=2.1.1",
     "scipy>=1.14.1",
     "toml>=0.10.2",
+    "svgwrite>=1.4.3",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
