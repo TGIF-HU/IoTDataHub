@@ -1,9 +1,10 @@
 import toml
 import svgwrite
+from typing import List
 
 
 class Room:
-    def __init__(self, name, walls):
+    def __init__(self, name: str, walls: List[List[float]]):
         self.name = name
         self.walls = walls
 
@@ -11,13 +12,20 @@ class Room:
         return f"Room(name={self.name}, walls={self.walls})"
 
 
+class Device:
+    def __init__(self, mac_address: str, position: List[float]):
+        self.mac_address = mac_address
+        self.position = position
+
+    def __repr__(self):
+        return f"Device(mac_address={self.mac_address}, position={self.position})"
+
+
 class Building:
-    def __init__(self, walls, rooms):
+    def __init__(self, walls: Room, rooms: List[Room], devices: List[Device]):
         self.walls = walls  # 建物の大枠の壁
         self.rooms = rooms  # 部屋のリスト
-
-    def add_room(self, room):
-        self.rooms.append(room)
+        self.devices = devices  # デバイスのリスト
 
     def __repr__(self):
         return f"Building(walls={self.walls}, rooms={self.rooms})"
@@ -29,6 +37,8 @@ class Building:
         for room in self.rooms:
             for i, (x, y) in enumerate(room.walls):
                 room.walls[i] = (x, -y + max_y_original)
+        for device in self.devices:
+            device.position = (device.position[0], -device.position[1] + max_y_original)
 
     def _scale_coordinates(self, scale_factor):
         for i, (x, y) in enumerate(self.walls):
@@ -36,6 +46,11 @@ class Building:
         for room in self.rooms:
             for i, (x, y) in enumerate(room.walls):
                 room.walls[i] = (x * scale_factor, y * scale_factor)
+        for device in self.devices:
+            device.position = (
+                device.position[0] * scale_factor,
+                device.position[1] * scale_factor,
+            )
 
     def to_svg(self, filename: str) -> str:
         # SVGのサイズ設定
@@ -55,6 +70,7 @@ class Building:
             size=(f"{max_x}px", f"{max_y}px"),
         )
 
+        # 建物の描画
         dwg.add(
             dwg.polygon(points=self.walls, fill="gray", stroke="black", stroke_width=1)
         )
@@ -77,6 +93,20 @@ class Building:
                 )
             )
 
+        # デバイスの描画
+        device_radius = 2
+        device_fill_color = "red"
+        for device in self.devices:
+            dwg.add(
+                dwg.circle(
+                    center=device.position,
+                    r=device_radius,
+                    fill=device_fill_color,
+                    stroke="black",
+                    stroke_width=0.5,
+                )
+            )
+
         return dwg.tostring()
 
 
@@ -86,10 +116,15 @@ def load_building_from_toml(file_path):
         data = toml.load(file)
 
     building_walls = [[float(x), float(y)] for x, y in data["building"]["walls"]]
+
     rooms = []
     for room_data in data["building"]["room"]:
         room_walls = [[float(x), float(y)] for x, y in room_data["walls"]]
         room = Room(name=room_data["name"], walls=room_walls)
         rooms.append(room)
 
-    return Building(walls=building_walls, rooms=rooms)
+    devices = [
+        Device(mac_address="", position=[11, 11])
+    ]  # ToDo: デバイスを常に更新するように
+
+    return Building(walls=building_walls, rooms=rooms, devices=devices)
