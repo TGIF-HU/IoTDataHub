@@ -21,11 +21,27 @@ class Device:
         return f"Device(mac_address={self.mac_address}, position={self.position})"
 
 
+class BLEReceiver:
+    def __init__(self, device_id: int, position: List[float]):
+        self.device_id = device_id
+        self.position = position
+
+    def __repr__(self):
+        return f"BLEReceiver(device_id={self.device_id}, position={self.position})"
+
+
 class Building:
-    def __init__(self, walls: Room, rooms: List[Room], devices: List[Device]):
+    def __init__(
+        self,
+        walls: Room,
+        rooms: List[Room],
+        devices: List[Device],
+        receivers: List[BLEReceiver],
+    ):
         self.walls = walls  # 建物の大枠の壁
         self.rooms = rooms  # 部屋のリスト
         self.devices = devices  # デバイスのリスト
+        self.receivers = receivers  # BLE受信機のリスト
 
     def __repr__(self):
         return f"Building(walls={self.walls}, rooms={self.rooms})"
@@ -39,6 +55,11 @@ class Building:
                 room.walls[i] = (x, -y + max_y_original)
         for device in self.devices:
             device.position = (device.position[0], -device.position[1] + max_y_original)
+        for receiver in self.receivers:
+            receiver.position = (
+                receiver.position[0],
+                -receiver.position[1] + max_y_original,
+            )
 
     def _scale_coordinates(self, scale_factor):
         for i, (x, y) in enumerate(self.walls):
@@ -50,6 +71,11 @@ class Building:
             device.position = (
                 device.position[0] * scale_factor,
                 device.position[1] * scale_factor,
+            )
+        for receiver in self.receivers:
+            receiver.position = (
+                receiver.position[0] * scale_factor,
+                receiver.position[1] * scale_factor,
             )
 
     def to_svg(self, filename: str) -> str:
@@ -107,6 +133,20 @@ class Building:
                 )
             )
 
+        # BLE受信機の描画
+        receiver_radius = 2
+        receiver_fill_color = "blue"
+        for receiver in self.receivers:
+            dwg.add(
+                dwg.circle(
+                    center=receiver.position,
+                    r=receiver_radius,
+                    fill=receiver_fill_color,
+                    stroke="black",
+                    stroke_width=0.5,
+                )
+            )
+
         return dwg.tostring()
 
 
@@ -123,8 +163,12 @@ def load_building_from_toml(file_path):
         room = Room(name=room_data["name"], walls=room_walls)
         rooms.append(room)
 
+    ble_receivers = [BLEReceiver(device_id=1, position=[1, 1])]
+
     devices = [
         Device(mac_address="", position=[11, 11])
     ]  # ToDo: デバイスを常に更新するように
 
-    return Building(walls=building_walls, rooms=rooms, devices=devices)
+    return Building(
+        walls=building_walls, rooms=rooms, devices=devices, receivers=ble_receivers
+    )
