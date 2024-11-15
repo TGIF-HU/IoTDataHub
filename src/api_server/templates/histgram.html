@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RSSI Histogram</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/histgram.js"></script>
+  </head>
+
+  <body>
+    <h1>RSSIヒストグラム</h1>
+    <p>
+      直近5分間の有効デバイス数: <span id="deviceCount">0</span>
+    </p>
+    <h2>Histogram</h2>
+    <canvas id="rssiChart" width="400" height="200"></canvas> <!-- ヒストグラムを表示するキャンバス -->
+  </body>
+</html>

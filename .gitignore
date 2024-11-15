@@ -9,6 +9,9 @@ wheels/
 # venv
 .venv
 
+# 出力画像
+cafeteria.svg
+
 receiver_positions.json
 
 .vscode

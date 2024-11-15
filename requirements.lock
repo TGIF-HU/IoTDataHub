@@ -26,5 +26,9 @@ numpy==2.1.1
     # via scipy
 scipy==1.14.1
     # via api-server
+svgwrite==1.4.3
+    # via api-server
+toml==0.10.2
+    # via api-server
 werkzeug==3.0.4
     # via flask

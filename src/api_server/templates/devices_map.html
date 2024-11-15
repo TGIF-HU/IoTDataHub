@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time SVG Map</title>
+    <style>
+      #svg-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+      }
+      
+      #svg-map {
+        width: 800px; 
+        height: 800px; 
+        border: 1px solid #ccc; /* 枠線を追加して視覚的な確認がしやすく */
+      }
+    </style>
+    <script>
+      // 更新関数
+      function updateSVG() {
+        const svgObject = document.getElementById('svg-map')
+        if (!svgObject) {
+          console.error('SVG element not found!')
+          return
+        }
+        const timestamp = new Date().getTime() // キャッシュ回避のためタイムスタンプを追加
+        svgObject.data = `/api/devices_map?t=${timestamp}`
+      }
+      
+      // ページ読み込み時に更新を開始
+      window.onload = function () {
+        // 初回更新と1秒ごとの更新
+        updateSVG()
+        setInterval(updateSVG, 10000)
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Real-Time Device Map</h1>
+    <div id="svg-container">
+      <object id="svg-map" type="image/svg+xml" data="/api/devices_map">Your browser does not support displaying SVG files.</object>
+    </div>
+  </body>
+</html>

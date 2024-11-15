@@ -1,4 +1,4 @@
-curl -X POST http://127.0.0.1:5000/ \
+curl -X POST http://192.168.2.105:5050/api/device \
 -H "Content-Type: application/json" \
 -d '{
     "device_id": "12345",
