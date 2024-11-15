@@ -23,13 +23,28 @@ class Building:
         return f"Building(walls={self.walls}, rooms={self.rooms})"
 
     def to_svg(self, filename: str) -> str:
-        dwg = svgwrite.Drawing(filename, profile="tiny")
-        max_y = max([y for _, y in self.walls])
-        # Draw building
-        building_wall_points = [(x, -y + max_y) for x, y in self.walls]
+        # SVGのサイズ設定
+        scale_factor = 8  # 拡大倍率
+        max_x = max([x for x, _ in self.walls]) * scale_factor
+        max_y = max([y for _, y in self.walls]) * scale_factor
+
+        # SVGのビュー設定を追加
+        dwg = svgwrite.Drawing(
+            filename,
+            profile="tiny",
+            viewBox=f"0 0 {max_x} {max_y}",
+            size=(f"{max_x}px", f"{max_y}px"),
+        )
+
+        # 最大のY座標を計算して反転を考慮
+        max_y_original = max([y for _, y in self.walls])
+        building_wall_points = [
+            (x * scale_factor, (-y + max_y_original) * scale_factor)
+            for x, y in self.walls
+        ]
         dwg.add(dwg.polygon(points=building_wall_points, fill="black"))
 
-        # Draw rooms
+        # 部屋の描画
         colors_palette = [
             "red",
             "green",
@@ -40,7 +55,10 @@ class Building:
             "magenta",
         ]
         for color, room in zip(colors_palette, self.rooms):
-            room_wall_points = [(x, -y + max_y) for x, y in room.walls]
+            room_wall_points = [
+                (x * scale_factor, (-y + max_y_original) * scale_factor)
+                for x, y in room.walls
+            ]
             dwg.add(dwg.polygon(points=room_wall_points, fill=color))
 
         return dwg.tostring()

@@ -30,6 +30,12 @@ def scanned_devices():
     return render_template("scanned_devices.html")
 
 
+@app.route("/devices_map")
+def devices_map():
+    return render_template("devices_map.html")
+
+
+# API関連
 @app.route("/api/device", methods=["POST"])
 def post_device():
     try:
