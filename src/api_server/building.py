@@ -13,8 +13,8 @@ class Room:
 
 class Building:
     def __init__(self, walls, rooms):
-        self.walls = walls
-        self.rooms = rooms
+        self.walls = walls  # 建物の大枠の壁
+        self.rooms = rooms  # 部屋のリスト
 
     def add_room(self, room):
         self.rooms.append(room)
@@ -22,11 +22,30 @@ class Building:
     def __repr__(self):
         return f"Building(walls={self.walls}, rooms={self.rooms})"
 
+    def _invert_coordinates(self):
+        max_y_original = max([y for _, y in self.walls])
+        for i, (x, y) in enumerate(self.walls):
+            self.walls[i] = (x, -y + max_y_original)
+        for room in self.rooms:
+            for i, (x, y) in enumerate(room.walls):
+                room.walls[i] = (x, -y + max_y_original)
+
+    def _scale_coordinates(self, scale_factor):
+        for i, (x, y) in enumerate(self.walls):
+            self.walls[i] = (x * scale_factor, y * scale_factor)
+        for room in self.rooms:
+            for i, (x, y) in enumerate(room.walls):
+                room.walls[i] = (x * scale_factor, y * scale_factor)
+
     def to_svg(self, filename: str) -> str:
         # SVGのサイズ設定
         scale_factor = 8  # 拡大倍率
-        max_x = max([x for x, _ in self.walls]) * scale_factor
-        max_y = max([y for _, y in self.walls]) * scale_factor
+
+        self._invert_coordinates()
+        self._scale_coordinates(scale_factor)  # ToDo: 反転しないデータ形式の場合の対処
+
+        max_x = max([x for x, _ in self.walls])
+        max_y = max([y for _, y in self.walls])
 
         # SVGのビュー設定を追加
         dwg = svgwrite.Drawing(
@@ -36,30 +55,27 @@ class Building:
             size=(f"{max_x}px", f"{max_y}px"),
         )
 
-        # 最大のY座標を計算して反転を考慮
-        max_y_original = max([y for _, y in self.walls])
-        building_wall_points = [
-            (x * scale_factor, (-y + max_y_original) * scale_factor)
-            for x, y in self.walls
-        ]
-        dwg.add(dwg.polygon(points=building_wall_points, fill="black"))
+        dwg.add(
+            dwg.polygon(points=self.walls, fill="gray", stroke="black", stroke_width=1)
+        )
 
         # 部屋の描画
-        colors_palette = [
-            "red",
-            "green",
-            "yellow",
-            "purple",
-            "orange",
-            "cyan",
-            "magenta",
-        ]
-        for color, room in zip(colors_palette, self.rooms):
-            room_wall_points = [
-                (x * scale_factor, (-y + max_y_original) * scale_factor)
-                for x, y in room.walls
-            ]
-            dwg.add(dwg.polygon(points=room_wall_points, fill=color))
+        room_fill_color = "white"
+        for room in self.rooms:
+            room_wall_points = room.walls
+            dwg.add(dwg.polygon(points=room_wall_points, fill=room_fill_color))
+
+        room_border_color = "black"
+        for room in self.rooms:
+            room_wall_points = room.walls
+            dwg.add(
+                dwg.polygon(
+                    points=room_wall_points,
+                    fill="none",
+                    stroke=room_border_color,
+                    stroke_width=1,
+                )
+            )
 
         return dwg.tostring()
 
