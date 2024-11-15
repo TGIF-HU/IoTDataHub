@@ -14,10 +14,16 @@ class DeviceData:
         self.name = json_data.get("name")
         time_str = json_data.get("time")
         # TODO "%Y-%m-%dT%H:%M:%SZ"か"%Y-%m-%dT%H:%M:%S.%fZ"か
-        self.timestamp = datetime.strptime(
-            time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+        self.timestamp = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+            tzinfo=timezone.utc
+        )
 
-        if self.device_id is None and self.mac_address is None and self.rssi is None and self.timestamp is None:
+        if (
+            self.device_id is None
+            and self.mac_address is None
+            and self.rssi is None
+            and self.timestamp is None
+        ):
             raise JsonElementNotFoundException
 
         # TODO ここで時間の✅を行いたくない
@@ -28,7 +34,9 @@ class DeviceData:
     # デバイスIDとMACアドレスが同じ場合は同じデバイスとして扱う
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return (self.device_id == other.device_id) and (self.mac_address == other.mac_address)
+            return (self.device_id == other.device_id) and (
+                self.mac_address == other.mac_address
+            )
         else:
             raise ValueError("Invalid data type")
 

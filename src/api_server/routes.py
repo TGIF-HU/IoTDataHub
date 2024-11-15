@@ -2,8 +2,9 @@ from flask import Flask, request, jsonify, render_template, Response
 from device import *
 from building import load_building_from_toml
 
-MAP_FILE = 'cafeteria.toml'
-OUTPUT_FILE = 'cafeteria.svg'
+MAP_FILE = "cafeteria.toml"
+OUTPUT_FILE = "cafeteria.svg"
+
 
 class DeviceAPI(Flask):
     def __init__(self, import_name):
@@ -17,16 +18,17 @@ class DeviceAPI(Flask):
         self.add_url_rule("/histgram", view_func=self.histgram)
         self.add_url_rule("/scanned_devices", view_func=self.scanned_devices)
 
-        self.add_url_rule("/api/device",
-                          view_func=self.post_device, methods=["POST"])
-        self.add_url_rule("/api/scanned_devices",
-                          view_func=self.get_scanned_devices, methods=["GET"])
-        self.add_url_rule("/api/valid_devices",
-                          view_func=self.get_valid_devices, methods=["GET"])
-        self.add_url_rule("/api/rssi",
-                          view_func=self.get_rssi, methods=["GET"])
-        self.add_url_rule("/api/devices_map",
-                          view_func=self.get_devices_map, methods=["GET"])
+        self.add_url_rule("/api/device", view_func=self.post_device, methods=["POST"])
+        self.add_url_rule(
+            "/api/scanned_devices", view_func=self.get_scanned_devices, methods=["GET"]
+        )
+        self.add_url_rule(
+            "/api/valid_devices", view_func=self.get_valid_devices, methods=["GET"]
+        )
+        self.add_url_rule("/api/rssi", view_func=self.get_rssi, methods=["GET"])
+        self.add_url_rule(
+            "/api/devices_map", view_func=self.get_devices_map, methods=["GET"]
+        )
         # self.add_url_rule("/save_receiver_positions",
         #                   view_func=self.save_receiver_positions, methods=["POST"])
         # self.add_url_rule("/get_device_positions_and_receiver_positions",
@@ -41,10 +43,10 @@ class DeviceAPI(Flask):
 
     def dashboard(self):
         return render_template("dashboard.html")
-    
+
     def histgram(self):
         return render_template("histgram.html")
-    
+
     def scanned_devices(self):
         return render_template("scanned_devices.html")
 
@@ -98,7 +100,7 @@ class DeviceAPI(Flask):
         building = load_building_from_toml(MAP_FILE)
         svg_data = building.to_svg(OUTPUT_FILE)
         print(svg_data)
-        return Response(svg_data, mimetype='image/svg+xml')
+        return Response(svg_data, mimetype="image/svg+xml")
 
     # def save_receiver_positions(self):
     #     if request.is_json:
