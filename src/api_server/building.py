@@ -44,7 +44,7 @@ class Building:
         self.receivers = receivers  # BLE受信機のリスト
 
     def __repr__(self):
-        return f"Building(walls={self.walls}, rooms={self.rooms})"
+        return f"Building(walls={self.walls}, rooms={self.rooms}, devices={self.devices}, receivers={self.receivers})"
 
     def _invert_coordinates(self):
         max_y_original = max([y for _, y in self.walls])

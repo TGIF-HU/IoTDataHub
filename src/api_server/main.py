@@ -93,7 +93,8 @@ def get_rssi():
 def get_devices_map():
     building = load_building_from_toml(MAP_FILE)
     svg_data = building.to_svg(OUTPUT_FILE)
-    print(svg_data)
+    print(building)
+    # print(svg_data)
     return Response(svg_data, mimetype="image/svg+xml")
 
 
