@@ -13,13 +13,18 @@ function fetchScannedDevices() {
                 const timestamp = new Date(device.timestamp).toLocaleString();
 
                 listItem.innerHTML = `
-            <strong>Device ID:</strong> ${device.device_id}<br>
-            <strong>MAC Address:</strong> ${device.mac_address}<br>
-            <strong>Manufacture ID:</strong> [${manufactureId}]<br>
-            <strong>Name:</strong> ${deviceName}<br>
-            <strong>Timestamp:</strong> ${timestamp}<br>
-            <strong>RSSI:</strong> ${device.rssi} dBm<br>
-        `;
+                    <strong>Device ID:</strong> ${device.device_id}<br>
+                    <strong>MAC Address:</strong> ${device.mac_address}<br>
+                    <strong>Manufacture ID:</strong> [${manufactureId}]<br>
+                    <strong>Name:</strong> ${deviceName}<br>
+                    <strong>Timestamp:</strong> ${timestamp}<br>
+                    <strong>RSSI:</strong> ${device.rssi} dBm<br>
+                `;
+
+                // device_id が BLE_Device の場合は赤色に設定
+                if (deviceName === 'BLE_Device') {
+                    listItem.style.color = 'red';
+                }
 
                 deviceList.appendChild(listItem);
             });
@@ -30,5 +35,5 @@ function fetchScannedDevices() {
 }
 
 window.onload = function () {
-    setInterval(fetchScannedDevices, 500); // 5秒ごとにスキャンされたデバイス情報を更新
+    setInterval(fetchScannedDevices, 500); // 0.5
 }
