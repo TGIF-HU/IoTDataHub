@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, render_template, Response
-import sqlite3
 from device import *
 from savingmanager import *
 from building import load_building_from_toml
