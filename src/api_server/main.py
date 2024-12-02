@@ -1,13 +1,19 @@
 from flask import Flask, request, jsonify, render_template, Response
+import sqlite3
 from device import *
+from savingmanager import *
 from building import load_building_from_toml
 
+PLACE = "cafeteria"
 MAP_FILE = "cafeteria.toml"
 OUTPUT_FILE = "cafeteria.svg"
+DB_FILE = "cafeteria.db"
+CALIBRATION_DEVICE_NAME = "BLE_Device"
 
 app = Flask(__name__)
-
 data_logger = DeviceLogger()
+saving_manager = SavingStateManager(timeout=30)
+database_manager = DatabaseManeger(db_file=DB_FILE)
 
 
 @app.route("/")
@@ -60,7 +66,37 @@ def post_device():
     data_logger.log(data)
     # 古いデータを削除
     data_logger.cleanup_old_data()
+
+    # 保存モードのときはnameがBLE_Deviceのものだけデータを保存
+    if saving_manager.is_saving_mode():
+        if data.name == CALIBRATION_DEVICE_NAME:
+            # 途中..............................................................
+            print("Saving data...")
+            calibration_data = CalibrationData()
+            calibration_data.from_devicedata(
+                data, place=PLACE, position=[0, 0] # 仮の位置
+            )
+            print(calibration_data)
+            database_manager.save(calibration_data)
+            return jsonify({"status": "success"}), 200
+
     return jsonify({"status": "success"}), 200
+
+
+# 保存モードを開始するAPI
+# timeout秒間だけ保存モードを有効にし、その後自動的に無効にする
+@app.route("/api/measure", methods=["POST"])
+def post_measure():
+    saving_manager.start_saving()
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "message": f"Saving mode enabled for {saving_manager.timeout} seconds",
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/api/scanned_devices", methods=["GET"])
@@ -93,8 +129,6 @@ def get_rssi():
 def get_devices_map():
     building = load_building_from_toml(MAP_FILE)
     svg_data = building.to_svg(OUTPUT_FILE)
-    print(building)
-    # print(svg_data)
     return Response(svg_data, mimetype="image/svg+xml")
 
 

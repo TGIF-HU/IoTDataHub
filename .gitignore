@@ -6,12 +6,12 @@ dist/
 wheels/
 *.egg-info
 
+# vscode
+.vscode
+
 # venv
 .venv
 
-# 出力画像
-cafeteria.svg
-
-receiver_positions.json
-
-.vscode
+# data
+*.svg
+*.db
