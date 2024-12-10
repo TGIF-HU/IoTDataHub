@@ -13,7 +13,7 @@ app = Flask(__name__)
 data_logger = DeviceLogger()
 saving_manager = SavingStateManager(timeout=30)
 database_manager = DatabaseManeger(db_file=DB_FILE)
-
+building = load_building_from_toml(MAP_FILE)
 
 @app.route("/")
 def index():
@@ -87,6 +87,7 @@ def post_device():
 @app.route("/api/measure", methods=["POST"])
 def post_measure():
     saving_manager.start_saving()
+    building.update_calibration_device()
     return (
         jsonify(
             {
@@ -126,7 +127,6 @@ def get_rssi():
 
 @app.route("/api/devices_map", methods=["GET"])
 def get_devices_map():
-    building = load_building_from_toml(MAP_FILE)
     svg_data = building.to_svg(OUTPUT_FILE)
     return Response(svg_data, mimetype="image/svg+xml")
 

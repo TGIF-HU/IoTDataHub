@@ -48,8 +48,8 @@ class Device:
 class BLEReceiver:
     def __init__(self, device_id: int, position: List[float]):
         self.device_id = device_id
-        self.position = position
-
+        self.position = position # x, y, *z*まである
+    
     def __repr__(self):
         return f"BLEReceiver(device_id={self.device_id}, position={self.position})"
 
@@ -74,17 +74,33 @@ class Building:
     
     def __repr__(self):
         return f"Building(walls={self.walls}, rooms={self.rooms}, devices={self.devices}, receivers={self.receivers})"
+    
+    def __copy__(self):
+        b = Building(walls=self.walls, rooms=self.rooms)
+        b.devices = self.devices
+        b.ble_receivers = self.ble_receivers
+        b.calibration_devices = self.calibration_devices
+        return b
 
     def add_device(self, device: Device):
-        self.devices.append(device)
+        self.devices.append(device) # ToDo: 時間によって追加されるデバイスを変える
 
-    def add_calibration_device(self, calibration_device: CalibrationDevice):
-        self.calibration_devices.append(calibration_device)
+    def update_calibration_device(self):
+        x_min, y_min, x_max, y_max = self._bounding_box()
+    
+        while True:
+            x = random.uniform(x_min, x_max)
+            y = random.uniform(y_min, y_max)
+            for room in self.rooms:
+                if room.is_point_in_room(x, y):
+                    calibration_device = CalibrationDevice(device_id=0, position=[x, y]) # ToDo: idは適当
+                    self.calibration_devices = [calibration_device] # ToDo: 複数のキャリブレーションデバイスを考慮したい
+                    return
 
     def add_ble_receiver(self, ble_receiver: BLEReceiver):
         self.ble_receivers.append(ble_receiver)
     
-    def bounding_box(self):
+    def _bounding_box(self):
         """部屋の外接矩形を返す"""
         min_x = min([x for x, _ in self.walls])
         max_x = max([x for x, _ in self.walls])
@@ -114,10 +130,11 @@ class Building:
             )
 
     def to_svg(self, filename: str) -> str:
-        self._invert_coordinates()
-
-        max_x = max([x for x, _ in self.walls])
-        max_y = max([y for _, y in self.walls])
+        cp = self.__copy__()
+        cp._invert_coordinates()
+        
+        max_x = max([x for x, _ in cp.walls])
+        max_y = max([y for _, y in cp.walls])
 
         # SVGのビュー設定を追加
         dwg = svgwrite.Drawing(
@@ -129,15 +146,15 @@ class Building:
 
         # 建物の描画
         dwg.add(
-            dwg.polygon(points=self.walls, fill="gray", stroke="black", stroke_width=0.1)
+            dwg.polygon(points=cp.walls, fill="gray", stroke="black", stroke_width=0.1)
         )
 
         # 部屋の描画
-        for room in self.rooms:
+        for room in cp.rooms:
             room_wall_points = room.walls
             dwg.add(dwg.polygon(points=room_wall_points, fill="white"))
 
-        for room in self.rooms:
+        for room in cp.rooms:
             room_wall_points = room.walls
             dwg.add(
                 dwg.polygon(
@@ -149,7 +166,7 @@ class Building:
             )
 
         # デバイスの描画
-        for device in self.devices:
+        for device in cp.devices:
             dwg.add(
                 dwg.circle(
                     center=device.position,
@@ -161,10 +178,11 @@ class Building:
             )
 
         # BLE受信機の描画
-        for ble_receiver in self.ble_receivers:
+        for ble_receiver in cp.ble_receivers:
+            print(ble_receiver)
             dwg.add(
                 dwg.circle(
-                    center=ble_receiver.position,
+                    center=(ble_receiver.position[0], ble_receiver.position[1]), # x,y,z なので注意
                     r=0.5,
                     fill="blue",
                     stroke="black",
@@ -173,7 +191,7 @@ class Building:
             )
         
         # キャリブレーションデバイスの描画
-        for calibration_device in self.calibration_devices:
+        for calibration_device in cp.calibration_devices:
             dwg.add(
                 dwg.circle(
                     center=calibration_device.position,
@@ -185,18 +203,6 @@ class Building:
             )
 
         return dwg.tostring()
-
-
-def spawn_calibrationdevice_in_room(building: Building) -> CalibrationDevice:
-    x_min, y_min, x_max, y_max = building.bounding_box()
-    
-    while True:
-        x = random.uniform(x_min, x_max)
-        y = random.uniform(y_min, y_max)
-        for room in building.rooms:
-            if room.is_point_in_room(x, y):
-                calibration_device = CalibrationDevice(device_id=0, position=[x, y]) # idは適当
-                return calibration_device
 
 
 def load_building_from_toml(file_path: str) -> Building:
@@ -216,5 +222,4 @@ def load_building_from_toml(file_path: str) -> Building:
         b.add_ble_receiver(BLEReceiver(device_id=r["device_id"], position=r["position"]))
     # ToDo: 追加情報を別途読み込む
     b.add_device(Device(mac_address="", position=[11, 11]))
-    b.add_calibration_device(spawn_calibrationdevice_in_room(b))
     return b
