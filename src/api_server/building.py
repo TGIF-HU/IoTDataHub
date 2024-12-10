@@ -179,7 +179,6 @@ class Building:
 
         # BLE受信機の描画
         for ble_receiver in cp.ble_receivers:
-            print(ble_receiver)
             dwg.add(
                 dwg.circle(
                     center=(ble_receiver.position[0], ble_receiver.position[1]), # x,y,z なので注意
