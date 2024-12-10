@@ -239,8 +239,10 @@ def load_building_from_toml(file_path: str) -> Building:
     ]
     b = Building(walls=walls, rooms=rooms)
     
+    ble_receivers = data["building"]["receiver"]
+    for r in ble_receivers:
+        b.add_ble_receiver(BLEReceiver(device_id=r["device_id"], position=r["position"]))
     # ToDo: 追加情報を別途読み込む
-    b.add_ble_receiver(BLEReceiver(device_id=1, position=[1, 1]))
     b.add_device(Device(mac_address="", position=[11, 11]))
     b.add_calibration_device(spawn_calibrationdevice_in_room(b))
     return b
