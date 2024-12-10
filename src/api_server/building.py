@@ -112,37 +112,9 @@ class Building:
                 calibration_device.position[0],
                 -calibration_device.position[1] + max_y_original,
             )
-            
-
-    # ToDo: 美しくない...
-    def _scale_coordinates(self, scale_factor):
-        for i, (x, y) in enumerate(self.walls):
-            self.walls[i] = (x * scale_factor, y * scale_factor)
-        for room in self.rooms:
-            for i, (x, y) in enumerate(room.walls):
-                room.walls[i] = (x * scale_factor, y * scale_factor)
-        for device in self.devices:
-            device.position = (
-                device.position[0] * scale_factor,
-                device.position[1] * scale_factor,
-            )
-        for ble_receiver in self.ble_receivers:
-            ble_receiver.position = (
-                ble_receiver.position[0] * scale_factor,
-                ble_receiver.position[1] * scale_factor,
-            )
-        for calibration_device in self.calibration_devices:
-            calibration_device.position = (
-                calibration_device.position[0] * scale_factor,
-                calibration_device.position[1] * scale_factor,
-            )
 
     def to_svg(self, filename: str) -> str:
-        # SVGのサイズ設定
-        scale_factor = 8  # 拡大倍率
-
         self._invert_coordinates()
-        self._scale_coordinates(scale_factor)  # ToDo: 反転しないデータ形式の場合の対処
 
         max_x = max([x for x, _ in self.walls])
         max_y = max([y for _, y in self.walls])
@@ -157,7 +129,7 @@ class Building:
 
         # 建物の描画
         dwg.add(
-            dwg.polygon(points=self.walls, fill="gray", stroke="black", stroke_width=1)
+            dwg.polygon(points=self.walls, fill="gray", stroke="black", stroke_width=0.1)
         )
 
         # 部屋の描画
@@ -172,7 +144,7 @@ class Building:
                     points=room_wall_points,
                     fill="none",
                     stroke="black",
-                    stroke_width=1,
+                    stroke_width=0.1,
                 )
             )
 
@@ -181,10 +153,10 @@ class Building:
             dwg.add(
                 dwg.circle(
                     center=device.position,
-                    r=2,
+                    r=0.5,
                     fill="red",
                     stroke="black",
-                    stroke_width=0.5,
+                    stroke_width=0.1,
                 )
             )
 
@@ -193,10 +165,10 @@ class Building:
             dwg.add(
                 dwg.circle(
                     center=ble_receiver.position,
-                    r=2,
+                    r=0.5,
                     fill="blue",
                     stroke="black",
-                    stroke_width=0.5,
+                    stroke_width=0.1,
                 )
             )
         
@@ -205,10 +177,10 @@ class Building:
             dwg.add(
                 dwg.circle(
                     center=calibration_device.position,
-                    r=2,
+                    r=0.5,
                     fill="green",
                     stroke="black",
-                    stroke_width=0.5,
+                    stroke_width=0.1,
                 )
             )
 
