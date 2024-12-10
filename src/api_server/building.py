@@ -63,7 +63,6 @@ class CalibrationDevice:
         return f"CalibrationDevice(device_id={self.device_id}, position={self.position})"
 
 
-
 class Building:
     def __init__(self, walls: List[List[float]], rooms: List[Room]):
         self.walls = walls
@@ -74,13 +73,6 @@ class Building:
     
     def __repr__(self):
         return f"Building(walls={self.walls}, rooms={self.rooms}, devices={self.devices}, receivers={self.receivers})"
-    
-    def __copy__(self):
-        b = Building(walls=self.walls, rooms=self.rooms)
-        b.devices = self.devices
-        b.ble_receivers = self.ble_receivers
-        b.calibration_devices = self.calibration_devices
-        return b
 
     def add_device(self, device: Device):
         self.devices.append(device) # ToDo: 時間によって追加されるデバイスを変える
@@ -108,33 +100,9 @@ class Building:
         max_y = max([y for _, y in self.walls])
         return (min_x, min_y, max_x, max_y)
 
-    # ToDo: 美しくない...
-    def _invert_coordinates(self):
-        max_y_original = max([y for _, y in self.walls])
-        for i, (x, y) in enumerate(self.walls):
-            self.walls[i] = (x, -y + max_y_original)
-        for room in self.rooms:
-            for i, (x, y) in enumerate(room.walls):
-                room.walls[i] = (x, -y + max_y_original)
-        for device in self.devices:
-            device.position = (device.position[0], -device.position[1] + max_y_original)
-        for ble_receiver in self.ble_receivers:
-            ble_receiver.position = (
-                ble_receiver.position[0],
-                -ble_receiver.position[1] + max_y_original,
-            )
-        for calibration_device in self.calibration_devices:
-            calibration_device.position = (
-                calibration_device.position[0],
-                -calibration_device.position[1] + max_y_original,
-            )
-
     def to_svg(self, filename: str) -> str:
-        cp = self.__copy__()
-        cp._invert_coordinates()
-        
-        max_x = max([x for x, _ in cp.walls])
-        max_y = max([y for _, y in cp.walls])
+        max_x = max([x for x, _ in self.walls])
+        max_y = max([y for _, y in self.walls])
 
         # SVGのビュー設定を追加
         dwg = svgwrite.Drawing(
@@ -146,15 +114,15 @@ class Building:
 
         # 建物の描画
         dwg.add(
-            dwg.polygon(points=cp.walls, fill="gray", stroke="black", stroke_width=0.1)
+            dwg.polygon(points=self.walls, fill="gray", stroke="black", stroke_width=0.1)
         )
 
         # 部屋の描画
-        for room in cp.rooms:
+        for room in self.rooms:
             room_wall_points = room.walls
             dwg.add(dwg.polygon(points=room_wall_points, fill="white"))
 
-        for room in cp.rooms:
+        for room in self.rooms:
             room_wall_points = room.walls
             dwg.add(
                 dwg.polygon(
@@ -166,7 +134,7 @@ class Building:
             )
 
         # デバイスの描画
-        for device in cp.devices:
+        for device in self.devices:
             dwg.add(
                 dwg.circle(
                     center=device.position,
@@ -178,7 +146,7 @@ class Building:
             )
 
         # BLE受信機の描画
-        for ble_receiver in cp.ble_receivers:
+        for ble_receiver in self.ble_receivers:
             dwg.add(
                 dwg.circle(
                     center=(ble_receiver.position[0], ble_receiver.position[1]), # x,y,z なので注意
@@ -190,7 +158,7 @@ class Building:
             )
         
         # キャリブレーションデバイスの描画
-        for calibration_device in cp.calibration_devices:
+        for calibration_device in self.calibration_devices:
             dwg.add(
                 dwg.circle(
                     center=calibration_device.position,
