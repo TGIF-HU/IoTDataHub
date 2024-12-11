@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 
 class DeviceData:
+    """scanned_devicesのデータ形式を決めるクラス"""
     def __init__(self, request):
         if not request.is_json:
             raise NotJsonException
@@ -31,8 +32,11 @@ class DeviceData:
         if self.timestamp < datetime.now(tz=timezone.utc) - timedelta(days=365):
             self.timestamp = datetime.now(tz=timezone.utc)
 
-    # デバイスIDとMACアドレスが同じ場合は同じデバイスとして扱う
     def __eq__(self, other):
+        """
+        デバイスIDとMACアドレスが同じ場合は同じデバイスとして扱うための特殊メソッド
+        == 演算子が使える
+        """
         if isinstance(other, self.__class__):
             return (self.device_id == other.device_id) and (
                 self.mac_address == other.mac_address
@@ -61,15 +65,17 @@ class DeviceData:
 
 
 class DeviceLogger:
+    """スキャンされたデバイスのデータのログを保存するクラス"""
     def __init__(self):
         self.data = []
 
-    # forで回せるようにする(初期化)
     def __iter__(self):
+        """イテレーターを使える特殊メソッド"""
         self.index = 0
         return self
 
     def __next__(self):
+        """イテレーターを使える特殊メソッド（２）"""
         if self.index < len(self.data):
             result = self.data[self.index]
             self.index += 1

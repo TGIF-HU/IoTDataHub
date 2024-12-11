@@ -102,9 +102,11 @@ def get_valid_devices():
 
 @app.route("/api/rssi", methods=["GET"])
 def get_rssi():
-    # 出力例:
-    # curl -X GET  http://192.168.2.105:5050/api/rssi
-    # {"1":[-79,-83,-95,-89,-73,-95,-72,-81,-88,-94,-96,-100,-96,-76,-99,-98]}
+    """
+    出力例:
+    curl -X GET  http://192.168.2.105:5050/api/rssi 
+    {"1":[-79,-83,-95,-89,-73,-95,-72,-81,-88,-94,-96,-100,-96,-76,-99,-98]}
+    """
     device_ids = []
     rssi_data = {}
     for d in data_logger:

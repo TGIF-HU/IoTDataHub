@@ -4,8 +4,8 @@ from device import DeviceData
 from typing import List
 
 
-# ble_calibraion.rsの保存するデータのクラス
 class CalibrationData:
+    """"ble_calibraion.rs関連のデータを保存するための形式を決めるクラス"""
     def from_devicedata(self, data: DeviceData, place: str, position: List[float]):
         self.device_id = data.device_id
         self.rssi = data.rssi
@@ -23,6 +23,7 @@ class CalibrationData:
         return f"CalibrationData(device_id={self.device_id}, rssi={self.rssi}, timestamp={self.timestamp}, place={self.place}, position={self.position})"
 
 class DatabaseManeger:
+    """データベースに保存するためのクラス"""
     def __init__(self, db_file):
         self.db_file = db_file
         
