@@ -55,14 +55,20 @@ def post_device():
         return jsonify({"status": "error", "message": str(e)}), 400
 
     # nameがBLE_Deviceのものだけデータを保存
+    # ToDo: /api/measureに送信するほうが美しいが、Receiver側の変更が必要なので大変
     if data.name == CALIBRATION_DEVICE_NAME:
-        # ToDo: 未完
+        if not building.calibration_devices:
+            print("Calibration Device setting...")
+            building.update_calibration_device()
+            return jsonify({"status": "success", "message": "Calibration Device updated"}), 200
         calibration_data = CalibrationData()
         calibration_data.from_devicedata(
             data, place=PLACE, position=building.calibration_devices[0].position #ToDo: [0]のみ対応
         )
         print(calibration_data)
         database_manager.save(calibration_data)
+        # CalibrationDeviceの位置を更新
+        building.update_calibration_device()
         return jsonify({"status": "success"}), 200
 
     # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
@@ -79,11 +85,9 @@ def post_device():
     return jsonify({"status": "success"}), 200
 
 
-# 保存モードを開始するAPI
-# timeout秒間だけ保存モードを有効にし、その後自動的に無効にする
+# CalibrationDataの保存
 @app.route("/api/measure", methods=["POST"])
 def post_measure():
-    building.update_calibration_device()
     return jsonify({"status": "success",}), 200
 
 
