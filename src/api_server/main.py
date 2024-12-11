@@ -7,7 +7,7 @@ PLACE = "cafeteria"
 MAP_FILE = "cafeteria.toml"
 OUTPUT_FILE = "cafeteria.svg"
 DB_FILE = "cafeteria.db"
-CALIBRATION_DEVICE_NAME = "BLE_Device"
+CALIBRATION_DEVICE_NAME = "CalibrationDevice"
 
 app = Flask(__name__)
 data_logger = DeviceLogger()
@@ -60,7 +60,8 @@ def post_device():
         if not building.calibration_devices:
             print("Calibration Device setting...")
             building.update_calibration_device()
-            return jsonify({"status": "success", "message": "Calibration Device updated"}), 200
+            data_logger.log(data)
+            return jsonify({"status": "success"}), 200
         calibration_data = CalibrationData()
         calibration_data.from_devicedata(
             data, place=PLACE, position=building.calibration_devices[0].position #ToDo: [0]のみ対応
@@ -69,8 +70,7 @@ def post_device():
         database_manager.save(calibration_data)
         # CalibrationDeviceの位置を更新
         building.update_calibration_device()
-        return jsonify({"status": "success"}), 200
-
+    
     # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
     for d in data_logger:
         if d == data:  # デバイスが一致(__eq__)
@@ -93,6 +93,7 @@ def post_measure():
 
 @app.route("/api/scanned_devices", methods=["GET"])
 def get_scanned_devices():
+    print(CALIBRATION_DEVICE_NAME in data_logger.to_dict())
     return jsonify(data_logger.to_dict())
 
 

@@ -21,8 +21,8 @@ function fetchScannedDevices() {
                     <strong>RSSI:</strong> ${device.rssi} dBm<br>
                 `;
 
-                // device_id が BLE_Device の場合は赤色に設定
-                if (deviceName === 'BLE_Device') {
+                // device_id が CalibrationDevice の場合、文字の色を赤にする
+                if (deviceName === 'CalibrationDevice') {
                     listItem.style.color = 'red';
                 }
 
