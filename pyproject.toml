@@ -1,5 +1,5 @@
 [project]
-name = "BLE-Server"
+name = "IoTDataHub"
 version = "0.1.0"
 description = "Add your description here"
 authors = [
