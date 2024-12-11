@@ -66,7 +66,6 @@ def post_device():
         calibration_data.from_devicedata(
             data, place=PLACE, position=building.calibration_devices[0].position #ToDo: [0]のみ対応
         )
-        print(calibration_data)
         database_manager.save(calibration_data)
         # CalibrationDeviceの位置を更新
         building.update_calibration_device()
@@ -93,7 +92,6 @@ def post_measure():
 
 @app.route("/api/scanned_devices", methods=["GET"])
 def get_scanned_devices():
-    print(CALIBRATION_DEVICE_NAME in data_logger.to_dict())
     return jsonify(data_logger.to_dict())
 
 
