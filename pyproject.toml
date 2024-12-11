@@ -1,5 +1,5 @@
 [project]
-name = "api-server"
+name = "BLE-Server"
 version = "0.1.0"
 description = "Add your description here"
 authors = [
@@ -30,4 +30,4 @@ allow-direct-references = true
 packages = ["src/api_server"]
 
 [tool.rye.scripts]
-server = { cmd = "python ./src/api_server/main.py" }
+server = { cmd = "python ./src/app.py" }

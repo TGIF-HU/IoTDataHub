@@ -11,3 +11,4 @@ def rssi2distance(rssi, power, N):
 def distance2rssi(distance, power, N):
     """RSSIをもとに距離を計算する関数"""
     return power - 10 * N * math.log10(distance)
+
