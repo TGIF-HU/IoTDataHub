@@ -188,5 +188,5 @@ def load_building_from_toml(file_path: str) -> Building:
     for r in ble_receivers:
         b.add_ble_receiver(BLEReceiver(device_id=r["device_id"], position=r["position"]))
     # ToDo: 追加情報を別途読み込む
-    b.add_device(Device(mac_address="", position=[11, 11]))
+    b.add_device(Device(mac_address="", position=[22,22]))
     return b

@@ -11,7 +11,6 @@ CALIBRATION_DEVICE_NAME = "BLE_Device"
 
 app = Flask(__name__)
 data_logger = DeviceLogger()
-saving_manager = SavingStateManager(timeout=30)
 database_manager = DatabaseManeger(db_file=DB_FILE)
 building = load_building_from_toml(MAP_FILE)
 
@@ -55,6 +54,17 @@ def post_device():
         print(e)
         return jsonify({"status": "error", "message": str(e)}), 400
 
+    # nameがBLE_Deviceのものだけデータを保存
+    if data.name == CALIBRATION_DEVICE_NAME:
+        # ToDo: 未完
+        calibration_data = CalibrationData()
+        calibration_data.from_devicedata(
+            data, place=PLACE, position=building.calibration_devices[0].position #ToDo: [0]のみ対応
+        )
+        print(calibration_data)
+        database_manager.save(calibration_data)
+        return jsonify({"status": "success"}), 200
+
     # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
     for d in data_logger:
         if d == data:  # デバイスが一致(__eq__)
@@ -66,19 +76,6 @@ def post_device():
     # 古いデータを削除
     data_logger.cleanup_old_data()
 
-    # 保存モードのときはnameがBLE_Deviceのものだけデータを保存
-    if saving_manager.is_saving_mode():
-        if data.name == CALIBRATION_DEVICE_NAME:
-            # 途中..............................................................
-            print("Saving data...")
-            calibration_data = CalibrationData()
-            calibration_data.from_devicedata(
-                data, place=PLACE, position=[0, 0] # 仮の位置
-            )
-            print(calibration_data)
-            database_manager.save(calibration_data)
-            return jsonify({"status": "success"}), 200
-
     return jsonify({"status": "success"}), 200
 
 
@@ -86,17 +83,8 @@ def post_device():
 # timeout秒間だけ保存モードを有効にし、その後自動的に無効にする
 @app.route("/api/measure", methods=["POST"])
 def post_measure():
-    saving_manager.start_saving()
     building.update_calibration_device()
-    return (
-        jsonify(
-            {
-                "status": "success",
-                "message": f"Saving mode enabled for {saving_manager.timeout} seconds",
-            }
-        ),
-        200,
-    )
+    return jsonify({"status": "success",}), 200
 
 
 @app.route("/api/scanned_devices", methods=["GET"])

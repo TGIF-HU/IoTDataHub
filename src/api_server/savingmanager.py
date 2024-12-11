@@ -4,27 +4,6 @@ from device import DeviceData
 from typing import List
 
 
-class SavingStateManager:
-    def __init__(self, timeout):
-        self.is_saving = False
-        self.timeout = timeout
-        self.timer = None
-
-    def start_saving(self):
-        self.is_saving = True
-        print("保存モード開始")
-        # タイマーでタイムアウト後に保存モードを終了
-        self.timer = Timer(self.timeout, self.stop_saving)
-        self.timer.start()
-
-    def stop_saving(self):
-        self.is_saving = False
-        print("保存モード終了")
-
-    def is_saving_mode(self):
-        return self.is_saving
-
-
 # ble_calibraion.rsの保存するデータのクラス
 class CalibrationData:
     def from_devicedata(self, data: DeviceData, place: str, position: List[float]):
@@ -67,7 +46,7 @@ class DatabaseManeger:
         db.close()
 
     def save(self, data: CalibrationData):
-        print("Saving data...")
+        print("Saving CalibrationData...")
         db = sqlite3.connect(self.db_file)
         cursor = db.cursor()
         cursor.execute(
