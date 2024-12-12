@@ -1,0 +1,23 @@
+services:
+  mqtt-broker:
+    image: emqx/emqx:latest
+    container_name: emqx_broker
+    ports:
+      - "ip:1883:1883"  # MQTTポート
+      - "ip:8083:8083"  # WebSocketポート
+      - "ip:18083:18083"  # Dashboardポート
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=0.0.0.0
+
+  flask-app:
+    build: ./src/api_server  # FlaskアプリのDockerfileがある場所
+    container_name: flask_app
+    ports:
+      - "ip:5000:5000"  # Flaskアプリの公開ポート
+    environment:
+      - MQTT_HOST=ip
+      - MQTT_PORT=1883
+    depends_on:
+      - mqtt-broker
+
