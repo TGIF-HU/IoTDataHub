@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 class DeviceData:
     """scanned_devicesのデータ形式を決めるクラス"""
+
     def __init__(self, request):
         if not request.is_json:
             raise NotJsonException
@@ -66,6 +67,7 @@ class DeviceData:
 
 class DeviceLogger:
     """スキャンされたデバイスのデータのログを保存するクラス"""
+
     def __init__(self):
         self.data = []
 

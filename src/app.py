@@ -14,6 +14,7 @@ data_logger = DeviceLogger()
 database_manager = DatabaseManeger(db_file=DB_FILE)
 building = load_building_from_toml(MAP_FILE)
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -64,12 +65,14 @@ def post_device():
             return jsonify({"status": "success"}), 200
         calibration_data = CalibrationData()
         calibration_data.from_devicedata(
-            data, place=PLACE, position=building.calibration_devices[0].position #ToDo: [0]のみ対応
+            data,
+            place=PLACE,
+            position=building.calibration_devices[0].position,  # ToDo: [0]のみ対応
         )
         database_manager.save(calibration_data)
         # CalibrationDeviceの位置を更新
         building.update_calibration_device()
-    
+
     # すでにスキャンされたデバイスの場合はRSSIデータを追加/更新
     for d in data_logger:
         if d == data:  # デバイスが一致(__eq__)
@@ -87,7 +90,14 @@ def post_device():
 # CalibrationDataの保存
 @app.route("/api/measure", methods=["POST"])
 def post_measure():
-    return jsonify({"status": "success",}), 200
+    return (
+        jsonify(
+            {
+                "status": "success",
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/api/scanned_devices", methods=["GET"])
@@ -104,7 +114,7 @@ def get_valid_devices():
 def get_rssi():
     """
     出力例:
-    curl -X GET  http://192.168.2.105:5050/api/rssi 
+    curl -X GET  http://192.168.2.105:5050/api/rssi
     {"1":[-79,-83,-95,-89,-73,-95,-72,-81,-88,-94,-96,-100,-96,-76,-99,-98]}
     """
     device_ids = []

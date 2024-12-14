@@ -8,7 +8,7 @@ class Room:
     def __init__(self, name: str, walls: List[List[float]]):
         self.name = name
         self.walls = walls
-    
+
     def is_point_in_room(self, x: float, y: float) -> bool:
         """点が部屋のポリゴン内部にあるかを判定(Crossing Number Algorithm)"""
         n = len(self.walls)
@@ -48,8 +48,8 @@ class Device:
 class BLEReceiver:
     def __init__(self, device_id: int, position: List[float]):
         self.device_id = device_id
-        self.position = position # x, y, *z*まである
-    
+        self.position = position  # x, y, *z*まである
+
     def __repr__(self):
         return f"BLEReceiver(device_id={self.device_id}, position={self.position})"
 
@@ -60,7 +60,9 @@ class CalibrationDevice:
         self.position = position
 
     def __repr__(self):
-        return f"CalibrationDevice(device_id={self.device_id}, position={self.position})"
+        return (
+            f"CalibrationDevice(device_id={self.device_id}, position={self.position})"
+        )
 
 
 class Building:
@@ -70,28 +72,32 @@ class Building:
         self.devices = []
         self.ble_receivers = []
         self.calibration_devices = []
-    
+
     def __repr__(self):
         return f"Building(walls={self.walls}, rooms={self.rooms}, devices={self.devices}, receivers={self.receivers})"
 
     def add_device(self, device: Device):
-        self.devices.append(device) # ToDo: 時間によって追加されるデバイスを変える
+        self.devices.append(device)  # ToDo: 時間によって追加されるデバイスを変える
 
     def update_calibration_device(self):
         x_min, y_min, x_max, y_max = self._bounding_box()
-    
+
         while True:
             x = random.uniform(x_min, x_max)
             y = random.uniform(y_min, y_max)
             for room in self.rooms:
                 if room.is_point_in_room(x, y):
-                    calibration_device = CalibrationDevice(device_id=0, position=[x, y]) # ToDo: idは適当
-                    self.calibration_devices = [calibration_device] # ToDo: 複数のキャリブレーションデバイスを考慮したい
+                    calibration_device = CalibrationDevice(
+                        device_id=0, position=[x, y]
+                    )  # ToDo: idは適当
+                    self.calibration_devices = [
+                        calibration_device
+                    ]  # ToDo: 複数のキャリブレーションデバイスを考慮したい
                     return
 
     def add_ble_receiver(self, ble_receiver: BLEReceiver):
         self.ble_receivers.append(ble_receiver)
-    
+
     def _bounding_box(self):
         """部屋の外接矩形を返す"""
         min_x = min([x for x, _ in self.walls])
@@ -114,7 +120,9 @@ class Building:
 
         # 建物の描画
         dwg.add(
-            dwg.polygon(points=self.walls, fill="gray", stroke="black", stroke_width=0.1)
+            dwg.polygon(
+                points=self.walls, fill="gray", stroke="black", stroke_width=0.1
+            )
         )
 
         # 部屋の描画
@@ -149,14 +157,17 @@ class Building:
         for ble_receiver in self.ble_receivers:
             dwg.add(
                 dwg.circle(
-                    center=(ble_receiver.position[0], ble_receiver.position[1]), # x,y,z なので注意
+                    center=(
+                        ble_receiver.position[0],
+                        ble_receiver.position[1],
+                    ),  # x,y,z なので注意
                     r=0.5,
                     fill="blue",
                     stroke="black",
                     stroke_width=0.1,
                 )
             )
-        
+
         # キャリブレーションデバイスの描画
         for calibration_device in self.calibration_devices:
             dwg.add(
@@ -183,10 +194,12 @@ def load_building_from_toml(file_path: str) -> Building:
         for r in data["building"]["room"]
     ]
     b = Building(walls=walls, rooms=rooms)
-    
+
     ble_receivers = data["building"]["receiver"]
     for r in ble_receivers:
-        b.add_ble_receiver(BLEReceiver(device_id=r["device_id"], position=r["position"]))
+        b.add_ble_receiver(
+            BLEReceiver(device_id=r["device_id"], position=r["position"])
+        )
     # ToDo: 追加情報を別途読み込む
-    b.add_device(Device(mac_address="", position=[22,22]))
+    b.add_device(Device(mac_address="", position=[22, 22]))
     return b

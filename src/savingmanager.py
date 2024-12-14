@@ -5,7 +5,8 @@ from typing import List
 
 
 class CalibrationData:
-    """"ble_calibraion.rs関連のデータを保存するための形式を決めるクラス"""
+    """ "ble_calibraion.rs関連のデータを保存するための形式を決めるクラス"""
+
     def from_devicedata(self, data: DeviceData, place: str, position: List[float]):
         self.device_id = data.device_id
         self.rssi = data.rssi
@@ -18,19 +19,23 @@ class CalibrationData:
             return (self.name == other.name) and (self.timestamp == other.timestamp)
         else:
             raise ValueError("Invalid data type")
-    
+
     def __repr__(self) -> str:
         return f"CalibrationData(device_id={self.device_id}, rssi={self.rssi}, timestamp={self.timestamp}, place={self.place}, position={self.position})"
 
+
 class DatabaseManeger:
     """データベースに保存するためのクラス"""
+
     def __init__(self, db_file):
         self.db_file = db_file
-        
+
         # List型がないので、sqlite3に登録
-        sqlite3.register_adapter(list, lambda l: ';'.join([str(i) for i in l]))
-        sqlite3.register_converter('List', lambda s: [item.decode('utf-8')  for item in s.split(bytes(b';'))])
-        
+        sqlite3.register_adapter(list, lambda l: ";".join([str(i) for i in l]))
+        sqlite3.register_converter(
+            "List", lambda s: [item.decode("utf-8") for item in s.split(bytes(b";"))]
+        )
+
         db = sqlite3.connect(self.db_file)
         cursor = db.cursor()
         cursor.execute(
